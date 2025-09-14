@@ -6,8 +6,8 @@ import {
 } from 'n8n-workflow';
 
 export class HtmlToPdfApi implements ICredentialType {
-	name = 'htmltopdfApi';
-	displayName = 'HtmlToPdfApi API';
+	name = 'HtmltoPdfApi';
+	displayName = 'HtmltoPdfApi API';
 	documentationUrl = 'https://www.pdfmunk.com/api-docs';
 	properties: INodeProperties[] = [
 		{

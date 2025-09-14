@@ -21,7 +21,7 @@ export class HtmlToPdf implements INodeType {
 		outputs: [NodeConnectionType.Main],
 		credentials: [
 			{
-				name: 'htmltopdfApi',
+				name: 'HtmltoPdfApi',
 				required: true,
 			},
 		],
@@ -182,7 +182,7 @@ export class HtmlToPdf implements INodeType {
 
 				const responseData = await this.helpers.httpRequestWithAuthentication.call(
 					this,
-					'htmltopdfApi',
+					'HtmltoPdfApi',
 					{
 						method: 'POST',
 						url: 'https://pdfmunk.com/api/v1/generatePdf',
