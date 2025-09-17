@@ -1,6 +1,6 @@
 {
   "name": "n8n-nodes-htmlcsstopdf",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "n8n node to convert html to pdf",
   "keywords": [
     "n8n-community-node-package"
@@ -33,7 +33,7 @@
   "n8n": {
     "n8nNodesApiVersion": 1,
     "credentials": [
-      "dist/credentials/htmltoPdfApi.credentials.js"
+      "dist/credentials/HtmltoPdfApi.credentials.js"
     ],
     "nodes": [
       "dist/nodes/HtmlToPdf/HtmlToPdf.node.js"
