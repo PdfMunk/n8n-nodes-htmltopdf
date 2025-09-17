@@ -1,6 +1,6 @@
 {
   "name": "n8n-nodes-htmlcsstopdf",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "n8n node to convert html to pdf",
   "keywords": [
     "n8n-community-node-package"

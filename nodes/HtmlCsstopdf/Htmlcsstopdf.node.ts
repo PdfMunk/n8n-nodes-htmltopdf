@@ -25,6 +25,7 @@ export class Htmlcsstopdf implements INodeType {
 				required: true,
 			},
 		],
+		usableAsTool: true, // ADD THIS LINE
 		properties: [
 			{
 				displayName: 'Operation',
