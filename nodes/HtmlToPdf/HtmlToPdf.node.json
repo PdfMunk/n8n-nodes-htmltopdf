@@ -1,5 +1,5 @@
 {
-	"node": "n8n-nodes-htmltopdf.htmlToPdf",
+	"node": "n8n-nodes-htmlcsstopdf.htmlToPdf",
 	"nodeVersion": "1.0",
 	"codexVersion": "1.0",
 	"categories": ["Development", "Images"],
