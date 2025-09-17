@@ -8,14 +8,14 @@ import { NodeConnectionType, NodeOperationError } from 'n8n-workflow';
 
 export class Htmlcsstopdf implements INodeType {
 	description: INodeTypeDescription = {
-		displayName: 'HTML to Pdf',
+		displayName: 'HTML to PDF',
 		name: 'htmlcsstopdf',
 		icon: { light: 'file:htmlcsstopdf.svg', dark: 'file:htmlcsstopdf.svg' },
 		group: ['transform'],
 		version: 1,
-		description: 'Convert HTML or a URL to an pdf(new)',
+		description: 'Convert HTML to PDF or Capture Website Screenshots to PDF',
 		defaults: {
-			name: 'HTML to Pdf',
+			name: 'HTML to PDF',
 		},
 		inputs: [NodeConnectionType.Main],
 		outputs: [NodeConnectionType.Main],
@@ -36,14 +36,14 @@ export class Htmlcsstopdf implements INodeType {
 					{
 						name: 'HTML to Pdf',
 						value: 'htmlToPdf',
-						description: 'Convert HTML and CSS to a pdf',
-						action: 'Convert HTML and CSS to an pdf',
+						description: 'Convert HTML/CSS to PDF',
+						action: 'Convert HTML to PDF',
 					},
 					{
 						name: 'URL to Pdf',
 						value: 'urlToPdf',
-						description: 'Capture a screenshot of a website into pdf',
-						action: 'Capture a screenshot of a website into pdf',
+						description: 'Capture Website Screenshot to PDF',
+						action: 'Capture a screenshot of a website in PDF format',
 					},
 				],
 				default: 'htmlToPdf',
@@ -54,7 +54,7 @@ export class Htmlcsstopdf implements INodeType {
 				name: 'html_content',
 				type: 'string',
 				default: '',
-				description: 'The HTML content to render as an image',
+				description: 'HTML content to render as an image',
 				displayOptions: {
 					show: {
 						operation: ['htmlToPdf'],
@@ -66,7 +66,7 @@ export class Htmlcsstopdf implements INodeType {
 				name: 'css_content',
 				type: 'string',
 				default: '',
-				description: 'The CSS to style the HTML',
+				description: 'CSS to style the HTML',
 				displayOptions: {
 					show: {
 						operation: ['htmlToPdf'],
