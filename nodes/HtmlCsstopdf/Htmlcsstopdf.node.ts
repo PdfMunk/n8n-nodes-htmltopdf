@@ -176,8 +176,6 @@ export class Htmlcsstopdf implements INodeType {
 					body.wait_till = this.getNodeParameter('wait_till', i) as number;
 					body.viewPortWidth = this.getNodeParameter('viewPortWidth', i) as number;
 					body.viewPortHeight = this.getNodeParameter('viewPortHeight', i) as number;
-					response_format = this.getNodeParameter('response_format_url', i) as string;
-					body.response_format = response_format;
 				}
 
 				const responseData = await this.helpers.httpRequestWithAuthentication.call(
