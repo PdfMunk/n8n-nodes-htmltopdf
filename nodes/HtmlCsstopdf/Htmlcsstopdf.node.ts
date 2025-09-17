@@ -6,11 +6,11 @@ import type {
 } from 'n8n-workflow';
 import { NodeConnectionType, NodeOperationError } from 'n8n-workflow';
 
-export class HtmlToPdf implements INodeType {
+export class Htmlcsstopdf implements INodeType {
 	description: INodeTypeDescription = {
 		displayName: 'HTML to Pdf',
-		name: 'htmlToPdf',
-		icon: { light: 'file:htmlToPdf.svg', dark: 'file:htmlToPdf.svg' },
+		name: 'htmlcsstopdf',
+		icon: { light: 'file:htmlcsstopdf.svg', dark: 'file:htmlcsstopdf.svg' },
 		group: ['transform'],
 		version: 1,
 		description: 'Convert HTML or a URL to an pdf(new)',
@@ -21,7 +21,7 @@ export class HtmlToPdf implements INodeType {
 		outputs: [NodeConnectionType.Main],
 		credentials: [
 			{
-				name: 'htmlToPdfApi',
+				name: 'htmlcsstopdfapi',
 				required: true,
 			},
 		],
@@ -182,7 +182,7 @@ export class HtmlToPdf implements INodeType {
 
 				const responseData = await this.helpers.httpRequestWithAuthentication.call(
 					this,
-					'htmlToPdfApi',
+					'htmlcsstopdfApi',
 					{
 						method: 'POST',
 						url: 'https://pdfmunk.com/api/v1/generatePdf',
