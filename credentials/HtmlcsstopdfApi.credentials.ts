@@ -7,7 +7,7 @@ import {
 
 export class HtmlcsstopdfApi implements ICredentialType {
 	name = 'htmlcsstopdfApi';
-	displayName = 'HtmlcsstopdfApi API';
+	displayName = 'HTML to PDF API';
 	documentationUrl = 'https://www.pdfmunk.com/api-docs';
 	properties: INodeProperties[] = [
 		{
