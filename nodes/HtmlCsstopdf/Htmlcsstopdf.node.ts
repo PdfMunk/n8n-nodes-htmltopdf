@@ -21,7 +21,7 @@ export class Htmlcsstopdf implements INodeType {
 		outputs: [NodeConnectionType.Main],
 		credentials: [
 			{
-				name: 'htmlcsstopdfapi',
+				name: 'htmlcsstopdfApi',
 				required: true,
 			},
 		],
