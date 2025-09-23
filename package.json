@@ -1,12 +1,31 @@
 {
   "name": "n8n-nodes-htmlcsstopdf",
-  "version": "2.0.2",
-  "description": "n8n node to convert html to pdf",
+  "version": "2.0.3",
+  "description": "n8n community node to convert HTML and CSS to PDF using PdfMunk API - perfect for invoices, reports, certificates, and document generation",
   "keywords": [
-    "n8n-community-node-package"
+    "n8n-community-node-package",
+    "html-to-pdf",
+    "css-to-pdf",
+    "pdf-generation",
+    "document-generation",
+    "invoice-generation",
+    "report-generation",
+    "certificate-generation",
+    "pdfmunk",
+    "html-pdf-converter",
+    "pdf-creator",
+    "document-automation",
+    "workflow-automation",
+    "pdf-api",
+    "html-css-pdf",
+    "automated-documents",
+    "pdf-from-html",
+    "business-documents",
+    "dynamic-pdf",
+    "pdf-reports"
   ],
   "license": "MIT",
-  "homepage": "",
+  "homepage": "https://github.com/PdfMunk/n8n-nodes-htmltopdf#readme",
   "author": {
     "name": "Rishabh Dugar",
     "email": "rishabh.dugar.com@gmail.com"
