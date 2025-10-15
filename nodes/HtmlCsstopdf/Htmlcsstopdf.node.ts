@@ -189,11 +189,11 @@ export class Htmlcsstopdf implements INodeType {
 						json: true,
 					},
 				);
-				returnData.push({ json: responseData, pairedItem: i });
+				returnData.push({ json: responseData, pairedItem: { item: i } });
 
 			} catch (error) {
 				if (this.continueOnFail()) {
-					returnData.push({ json: { error: error.message }, pairedItem: i });
+					returnData.push({ json: { error: error.message }, pairedItem: { item: i } });
 				} else {
 					throw new NodeOperationError(this.getNode(), error, { itemIndex: i });
 				}
