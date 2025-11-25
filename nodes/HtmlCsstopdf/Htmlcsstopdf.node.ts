@@ -25,7 +25,7 @@ export class Htmlcsstopdf implements INodeType {
 				required: true,
 			},
 		],
-		usableAsTool: true, // ADD THIS LINE
+		usableAsTool: true,
 		properties: [
 			{
 				displayName: 'Operation',
@@ -160,6 +160,7 @@ export class Htmlcsstopdf implements INodeType {
 		for (let i = 0; i < items.length; i++) {
 			try {
 				const operation = this.getNodeParameter('operation', i) as string;
+				const outputFormat = this.getNodeParameter('output_format', i) as string;
 				let body: Record<string, unknown> = {};
 
 				if (operation === 'htmlToPdf') {
@@ -167,27 +168,56 @@ export class Htmlcsstopdf implements INodeType {
 					body.css_content = this.getNodeParameter('css_content', i) as string;
 					body.viewPortWidth = this.getNodeParameter('viewPortWidth', i) as number;
 					body.viewPortHeight = this.getNodeParameter('viewPortHeight', i) as number;
-					body.output_format = this.getNodeParameter('output_format', i) as string;
+					body.output_format = outputFormat;
 				} else if (operation === 'urlToPdf') {
 					body.url = this.getNodeParameter('url', i) as string;
 					body.full_page = this.getNodeParameter('full_page', i) as boolean;
 					body.wait_till = this.getNodeParameter('wait_till', i) as number;
 					body.viewPortWidth = this.getNodeParameter('viewPortWidth', i) as number;
 					body.viewPortHeight = this.getNodeParameter('viewPortHeight', i) as number;
-					body.output_format = this.getNodeParameter('output_format', i) as string;
+					body.output_format = outputFormat;
 				}
 
-				const responseData = await this.helpers.httpRequestWithAuthentication.call(
-					this,
-					'htmlcsstopdfApi',
-					{
-						method: 'POST',
-						url: 'https://pdfmunk.com/api/v1/generatePdf',
-						body,
-						json: true,
-					},
-				);
-				returnData.push({ json: responseData, pairedItem: { item: i } });
+				// Handle binary file response
+				if (outputFormat === 'file') {
+					const responseData = await this.helpers.httpRequestWithAuthentication.call(
+						this,
+						'htmlcsstopdfApi',
+						{
+							method: 'POST',
+							url: 'https://pdfmunk.com/api/v1/generatePdf',
+							body,
+							json: true,
+							encoding: 'arraybuffer',
+							returnFullResponse: true,
+						},
+					);
+
+					const binaryData = await this.helpers.prepareBinaryData(
+						Buffer.from(responseData.body as ArrayBuffer),
+						'document.pdf',
+						'application/pdf',
+					);
+
+					returnData.push({
+						json: { success: true },
+						binary: { data: binaryData },
+						pairedItem: { item: i },
+					});
+				} else {
+					// Handle URL response
+					const responseData = await this.helpers.httpRequestWithAuthentication.call(
+						this,
+						'htmlcsstopdfApi',
+						{
+							method: 'POST',
+							url: 'https://pdfmunk.com/api/v1/generatePdf',
+							body,
+							json: true,
+						},
+					);
+					returnData.push({ json: responseData, pairedItem: { item: i } });
+				}
 
 			} catch (error) {
 				if (this.continueOnFail()) {
