@@ -98,19 +98,18 @@ export class Htmlcsstopdf implements INodeType {
 				},
 			},
 			{
-				displayName: 'Response Format',
-				name: 'response_format_html',
+				displayName: 'Output Format',
+				name: 'output_format',
 				type: 'options',
 				options: [
 					{ name: 'URL', value: 'url' },
-					{ name: 'PNG', value: 'png' },
-					{ name: 'Base64', value: 'base64' },
+					{ name: 'File', value: 'file' },
 				],
 				default: 'url',
-				description: 'Format of the image response',
+				description: 'Format of the output response',
 				displayOptions: {
 					show: {
-						operation: ['htmlToPdf'],
+						operation: ['htmlToPdf', 'urlToPdf'],
 					},
 				},
 			},
@@ -162,21 +161,20 @@ export class Htmlcsstopdf implements INodeType {
 			try {
 				const operation = this.getNodeParameter('operation', i) as string;
 				let body: Record<string, unknown> = {};
-				let response_format: string;
 
 				if (operation === 'htmlToPdf') {
 					body.html_content = this.getNodeParameter('html_content', i) as string;
 					body.css_content = this.getNodeParameter('css_content', i) as string;
 					body.viewPortWidth = this.getNodeParameter('viewPortWidth', i) as number;
 					body.viewPortHeight = this.getNodeParameter('viewPortHeight', i) as number;
-					response_format = this.getNodeParameter('response_format_html', i) as string;
-					body.response_format = response_format;
+					body.output_format = this.getNodeParameter('output_format', i) as string;
 				} else if (operation === 'urlToPdf') {
 					body.url = this.getNodeParameter('url', i) as string;
 					body.full_page = this.getNodeParameter('full_page', i) as boolean;
 					body.wait_till = this.getNodeParameter('wait_till', i) as number;
 					body.viewPortWidth = this.getNodeParameter('viewPortWidth', i) as number;
 					body.viewPortHeight = this.getNodeParameter('viewPortHeight', i) as number;
+					body.output_format = this.getNodeParameter('output_format', i) as string;
 				}
 
 				const responseData = await this.helpers.httpRequestWithAuthentication.call(
