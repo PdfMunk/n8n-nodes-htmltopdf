@@ -1,6 +1,6 @@
 {
   "name": "n8n-nodes-htmlcsstopdf",
-  "version": "2.0.5",
+  "version": "2.1.0",
   "description": "n8n community node to convert HTML and CSS to PDF using PdfMunk API - perfect for invoices, reports, certificates, and document generation",
   "keywords": [
     "n8n-community-node-package",
