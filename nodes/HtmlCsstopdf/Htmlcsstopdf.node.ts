@@ -150,6 +150,18 @@ export class Htmlcsstopdf implements INodeType {
 					},
 				},
 			},
+			{
+				displayName: 'Timeout',
+				name: 'timeout',
+				type: 'number',
+				default: 300,
+				description: 'Request timeout in seconds (default: 300 seconds = 5 minutes). Increase this for large PDFs.',
+				displayOptions: {
+					show: {
+						operation: ['htmlToPdf', 'urlToPdf'],
+					},
+				},
+			},
 		],
 	};
 
@@ -161,6 +173,8 @@ export class Htmlcsstopdf implements INodeType {
 			try {
 				const operation = this.getNodeParameter('operation', i) as string;
 				const outputFormat = this.getNodeParameter('output_format', i) as string;
+				const timeoutSeconds = this.getNodeParameter('timeout', i) as number;
+				const timeout = timeoutSeconds * 1000; // Convert seconds to milliseconds
 				let body: Record<string, unknown> = {};
 
 				if (operation === 'htmlToPdf') {
@@ -190,6 +204,7 @@ export class Htmlcsstopdf implements INodeType {
 							json: true,
 							encoding: 'arraybuffer',
 							returnFullResponse: true,
+							timeout,
 						},
 					);
 
@@ -214,6 +229,7 @@ export class Htmlcsstopdf implements INodeType {
 							url: 'https://pdfmunk.com/api/v1/generatePdf',
 							body,
 							json: true,
+							timeout,
 						},
 					);
 					returnData.push({ json: responseData, pairedItem: { item: i } });
