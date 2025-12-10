@@ -34,13 +34,13 @@ export class Htmlcsstopdf implements INodeType {
 				noDataExpression: true,
 				options: [
 					{
-						name: 'HTML to Pdf',
+						name: 'HTML to PDF',
 						value: 'htmlToPdf',
-						description: 'Convert HTML/CSS to PDF',
+						description: 'Generate PDF from HTML/CSS',
 						action: 'Convert HTML to PDF',
 					},
 					{
-						name: 'URL to Pdf',
+						name: 'URL to PDF',
 						value: 'urlToPdf',
 						description: 'Capture Website Screenshot to PDF',
 						action: 'Capture a screenshot of a website in PDF format',
@@ -54,7 +54,7 @@ export class Htmlcsstopdf implements INodeType {
 				name: 'html_content',
 				type: 'string',
 				default: '',
-				description: 'HTML content to render as an image',
+				description: 'HTML content to render in the document',
 				displayOptions: {
 					show: {
 						operation: ['htmlToPdf'],
@@ -151,7 +151,7 @@ export class Htmlcsstopdf implements INodeType {
 				},
 			},
 			{
-				displayName: 'Timeout',
+				displayName: 'Timeout (in seconds)',
 				name: 'timeout',
 				type: 'number',
 				default: 300,
