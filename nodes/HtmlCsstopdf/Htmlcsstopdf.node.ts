@@ -163,7 +163,7 @@ export class Htmlcsstopdf implements INodeType {
 				},
 			},
 			{
-				displayName: 'Timeout (in seconds)',
+				displayName: 'Timeout (in Seconds)',
 				name: 'timeout',
 				type: 'number',
 				default: 300,
