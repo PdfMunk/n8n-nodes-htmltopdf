@@ -151,6 +151,18 @@ export class Htmlcsstopdf implements INodeType {
 				},
 			},
 			{
+				displayName: 'Output Filename',
+				name: 'output_filename',
+				type: 'string',
+				default: 'document',
+				description: 'The filename for the generated PDF (without .pdf extension)',
+				displayOptions: {
+					show: {
+						operation: ['htmlToPdf', 'urlToPdf'],
+					},
+				},
+			},
+			{
 				displayName: 'Timeout (in seconds)',
 				name: 'timeout',
 				type: 'number',
@@ -173,9 +185,10 @@ export class Htmlcsstopdf implements INodeType {
 			try {
 				const operation = this.getNodeParameter('operation', i) as string;
 				const outputFormat = this.getNodeParameter('output_format', i) as string;
+				const outputFilename = this.getNodeParameter('output_filename', i) as string;
 				const timeoutSeconds = this.getNodeParameter('timeout', i) as number;
 				const timeout = timeoutSeconds * 1000; // Convert seconds to milliseconds
-				let body: Record<string, unknown> = {};
+				let body: Record<string, unknown> = { output_filename: outputFilename };
 
 				if (operation === 'htmlToPdf') {
 					body.html_content = this.getNodeParameter('html_content', i) as string;
@@ -210,7 +223,7 @@ export class Htmlcsstopdf implements INodeType {
 
 					const binaryData = await this.helpers.prepareBinaryData(
 						Buffer.from(responseData.body as ArrayBuffer),
-						'document.pdf',
+						`${outputFilename}.pdf`,
 						'application/pdf',
 					);
 
