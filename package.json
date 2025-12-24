@@ -1,5 +1,5 @@
 {
-  "name": "n8n-nodes-htmlcsstopdf",
+  "name": "n8n-nodes-htmlcsstopdf-sandbox",
   "version": "2.0.4",
   "description": "n8n community node to convert HTML and CSS to PDF using PdfMunk API - perfect for invoices, reports, certificates, and document generation",
   "keywords": [

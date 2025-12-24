@@ -1,0 +1,1561 @@
+openapi: 3.0.3
+info:
+  title: PDFMunk API
+  description: |
+    Comprehensive API for PDF generation, image generation, chart creation, and document manipulation.
+    
+    ## Authentication
+    All endpoints require a `CLIENT-API-KEY` header for authentication.
+    
+    ## Rate Limits
+    - Image generation: 10 requests per 60 seconds
+    - Other endpoints may have different limits based on your subscription tier
+    
+  version: 1.0.0
+  contact:
+    name: PDFMunk Support
+    url: https://pdfmunk.com
+  
+servers:
+  - url: https://pdfmunk.com/api
+    description: Production server
+
+security:
+  - ApiKeyAuth: []
+
+tags:
+  - name: PDF Generation
+    description: Generate PDFs from HTML or URLs
+  - name: Image Generation
+    description: Generate images from HTML or URLs
+  - name: Chart Generation
+    description: Generate chart images using Chart.js
+  - name: PDF Tools
+    description: Merge and split PDF documents
+  - name: PDF Utilities
+    description: Unlock password-protected PDFs
+  - name: PDF Parsing
+    description: Parse PDFs into structured text, layout blocks, tables, and image metadata
+  - name: Utilities
+    description: Helper utilities like URL to HTML conversion
+  - name: Image Compression
+    description: Compress images with quality control
+
+paths:
+  /v1/generatePdf:
+    post:
+      tags:
+        - PDF Generation
+      summary: Generate PDF from HTML or URL
+      description: |
+        Creates a PDF from either HTML content or a URL. Supports custom page sizes, 
+        fonts, viewport dimensions, and dynamic parameters.
+        
+        **Note:** Either `url` or `html_content` must be provided, but not both.
+      operationId: generatePdf
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - html_content
+              properties:
+                url:
+                  type: string
+                  format: uri
+                  description: URL of the webpage to convert to PDF
+                  example: https://example.com
+                html_content:
+                  type: string
+                  description: HTML content to convert to PDF
+                  example: "<html><body><h1>Hello World</h1></body></html>"
+                css_content:
+                  type: string
+                  description: Optional CSS to apply to the HTML
+                  example: "body { font-family: Arial; }"
+                output_format:
+                  type: string
+                  enum: [url, pdf, binary, file]
+                  default: url
+                  description: |
+                    Output format:
+                    - `url`: Returns a URL to the uploaded PDF (default)
+                    - `pdf`, `binary`, `file`: Returns the PDF file directly
+                paper_size:
+                  type: string
+                  enum: [A4, A3, A5, Letter, Legal, Tabloid]
+                  default: A4
+                  description: Paper size for the PDF
+                landscape:
+                  type: boolean
+                  default: false
+                  description: Set to true for landscape orientation
+                printBackground:
+                  type: boolean
+                  default: true
+                  description: Whether to print background graphics
+                displayHeaderFooter:
+                  type: boolean
+                  default: false
+                  description: Whether to display header and footer
+                preferCSSPageSize:
+                  type: boolean
+                  default: true
+                  description: Whether to prefer CSS-defined page size
+                page_size:
+                  type: integer
+                  minimum: 1
+                  maximum: 20
+                  description: Maximum number of pages to generate (tier-dependent)
+                  example: 10
+                paperWidth:
+                  type: number
+                  description: Custom paper width in pixels
+                  example: 800
+                paperHeight:
+                  type: number
+                  description: Custom paper height in pixels
+                  example: 1200
+                viewPortWidth:
+                  type: integer
+                  default: 1080
+                  description: Viewport width for rendering
+                  example: 1920
+                viewPortHeight:
+                  type: integer
+                  default: 720
+                  description: Viewport height for rendering
+                  example: 1080
+                font:
+                  type: string
+                  description: Google Font name(s) to include (use | separator for multiple)
+                  example: "Roboto|Open Sans"
+                wait_till:
+                  type: integer
+                  default: 0
+                  description: Time to wait in seconds before generating PDF
+                  example: 2
+                dynamic_params:
+                  type: object
+                  description: Dynamic parameters to replace in HTML (e.g., {{name}} becomes value)
+                  additionalProperties: true
+                  example: {"name": "John", "date": "2025-12-13"}
+            examples:
+              html_to_pdf:
+                summary: HTML to PDF
+                value:
+                  html_content: "<html><body><h1>Invoice</h1><p>Total: $100</p></body></html>"
+                  css_content: "body { font-family: Arial; } h1 { color: blue; }"
+                  output_format: url
+                  paper_size: A4
+              url_to_pdf:
+                summary: URL to PDF
+                value:
+                  url: "https://example.com"
+                  output_format: pdf
+                  landscape: true
+      responses:
+        '200':
+          description: PDF generated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  pdf_url:
+                    type: string
+                    format: uri
+                    description: URL to download the PDF (when output_format is 'url')
+                    example: "https://storage.pdfmunk.com/pdfs/abc123.pdf"
+                  file_size_bytes:
+                    type: integer
+                    example: 51234
+                  file_deletion_date:
+                    type: string
+                    format: date
+                    description: Date when the file will be deleted (30 days)
+                    example: "2026-01-12"
+                  source_type:
+                    type: string
+                    enum: [url, html]
+                    example: html
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+                description: PDF file (when output_format is 'pdf', 'binary', or 'file')
+        '400':
+          description: Bad request - validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized - invalid or missing API key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /v1/generateImage:
+    post:
+      tags:
+        - Image Generation
+      summary: Generate image from HTML or URL
+      description: |
+        Creates a PNG image from either HTML content or a URL. Supports custom dimensions,
+        quality settings, fonts, and dynamic parameters.
+        
+        **Note:** Either `url` or `html_content` must be provided, but not both.
+      operationId: generateImage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                url:
+                  type: string
+                  format: uri
+                  description: URL of the webpage to capture as image
+                  example: https://example.com
+                html_content:
+                  type: string
+                  description: HTML content to render as image
+                  example: "<div style='padding: 20px;'><h1>Hello</h1></div>"
+                css_content:
+                  type: string
+                  description: Optional CSS to apply to the HTML
+                  example: "div { background: white; }"
+                output_format:
+                  type: string
+                  enum: [url, base64, both, image, png, binary, file]
+                  default: url
+                  description: |
+                    Output format:
+                    - `url`: Returns a URL to the uploaded image (default)
+                    - `base64`: Returns base64-encoded image string
+                    - `both`: Returns both URL and base64
+                    - `image`, `png`, `binary`, `file`: Returns the image file directly
+                width:
+                  type: integer
+                  default: 1280
+                  description: Width of the output image in pixels
+                  example: 800
+                height:
+                  type: integer
+                  default: 720
+                  description: Height of the output image in pixels
+                  example: 600
+                viewPortWidth:
+                  type: integer
+                  description: Viewport width for rendering (if different from output width)
+                  example: 1920
+                viewPortHeight:
+                  type: integer
+                  description: Viewport height for rendering (if different from output height)
+                  example: 1080
+                device_scale_factor:
+                  type: number
+                  default: 1
+                  minimum: 1
+                  maximum: 3
+                  description: Device scale factor for higher resolution
+                  example: 2
+                quality:
+                  type: integer
+                  minimum: 30
+                  maximum: 100
+                  default: 80
+                  description: Image quality (30-100)
+                  example: 90
+                full_page:
+                  type: boolean
+                  default: false
+                  description: Capture full page (for URLs only)
+                wait_till:
+                  type: integer
+                  default: 0
+                  description: Time to wait in seconds before capturing
+                  example: 2
+                wait_until:
+                  type: string
+                  enum: [load, domcontentloaded, networkidle]
+                  default: load
+                  description: When to consider navigation successful (for URLs)
+                font:
+                  type: string
+                  description: Google Font name(s) to include (use | separator for multiple)
+                  example: "Poppins|Montserrat"
+                dynamic_params:
+                  type: object
+                  description: Dynamic parameters to replace in HTML
+                  additionalProperties: true
+                  example: {"user_name": "Alice", "score": "95"}
+            examples:
+              html_to_image:
+                summary: HTML to Image
+                value:
+                  html_content: "<div style='width: 600px; padding: 40px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;'><h1>Welcome!</h1></div>"
+                  width: 600
+                  height: 400
+                  output_format: url
+                  quality: 90
+              url_screenshot:
+                summary: URL Screenshot
+                value:
+                  url: "https://example.com"
+                  output_format: base64
+                  full_page: true
+                  wait_until: networkidle
+      responses:
+        '200':
+          description: Image generated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  image_url:
+                    type: string
+                    format: uri
+                    description: URL to download the image (when output_format is 'url' or 'both')
+                    example: "https://storage.pdfmunk.com/images/xyz789.png"
+                  image_base64:
+                    type: string
+                    description: Base64-encoded image (when output_format is 'base64' or 'both')
+                    example: "iVBORw0KGgoAAAANSUhEUgAAAAUA..."
+                  file_size_bytes:
+                    type: integer
+                    example: 28491
+                  file_deletion_date:
+                    type: string
+                    format: date
+                    example: "2026-01-12"
+                  request_id:
+                    type: string
+                    format: uuid
+                    example: "550e8400-e29b-41d4-a716-446655440000"
+                  execution_time_ms:
+                    type: integer
+                    description: Time taken to generate the image in milliseconds
+                    example: 1523
+            image/png:
+              schema:
+                type: string
+                format: binary
+                description: PNG file (when output_format is 'image', 'png', 'binary', or 'file')
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /v1/generateChart:
+    post:
+      tags:
+        - Chart Generation
+      summary: Generate chart image using Chart.js
+      description: |
+        Creates a chart image using Chart.js library. Supports various chart types
+        including line, bar, pie, doughnut, radar, and more.
+      operationId: generateChart
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - chart_type
+                - data
+              properties:
+                chart_type:
+                  type: string
+                  enum: [line, bar, pie, doughnut, radar, polarArea, bubble, scatter]
+                  description: Type of chart to generate
+                  example: bar
+                data:
+                  type: object
+                  description: Chart.js data configuration
+                  properties:
+                    labels:
+                      type: array
+                      items:
+                        type: string
+                      description: Labels for the chart (required for line, bar, radar)
+                      example: ["Jan", "Feb", "Mar", "Apr", "May"]
+                    datasets:
+                      type: array
+                      description: Array of datasets
+                      items:
+                        type: object
+                        properties:
+                          label:
+                            type: string
+                            example: "Sales 2024"
+                          data:
+                            type: array
+                            items:
+                              type: number
+                            example: [65, 59, 80, 81, 56]
+                          backgroundColor:
+                            oneOf:
+                              - type: string
+                              - type: array
+                                items:
+                                  type: string
+                            example: "rgba(75, 192, 192, 0.6)"
+                          borderColor:
+                            type: string
+                            example: "rgba(75, 192, 192, 1)"
+                          borderWidth:
+                            type: integer
+                            example: 2
+                options:
+                  type: object
+                  description: Chart.js options configuration
+                  additionalProperties: true
+                  example:
+                    responsive: true
+                    plugins:
+                      legend:
+                        position: 'top'
+                      title:
+                        display: true
+                        text: 'Monthly Sales'
+                width:
+                  type: integer
+                  default: 800
+                  description: Width of the chart in pixels
+                  example: 1000
+                height:
+                  type: integer
+                  default: 600
+                  description: Height of the chart in pixels
+                  example: 600
+                output_format:
+                  type: string
+                  enum: [url, base64, both, image]
+                  default: url
+                  description: Output format for the chart image
+            examples:
+              bar_chart:
+                summary: Bar Chart
+                value:
+                  chart_type: bar
+                  data:
+                    labels: ["Q1", "Q2", "Q3", "Q4"]
+                    datasets:
+                      - label: "Revenue"
+                        data: [120000, 150000, 180000, 200000]
+                        backgroundColor: "rgba(54, 162, 235, 0.6)"
+                        borderColor: "rgba(54, 162, 235, 1)"
+                        borderWidth: 1
+                  options:
+                    responsive: true
+                    plugins:
+                      title:
+                        display: true
+                        text: "Quarterly Revenue 2024"
+                  width: 800
+                  height: 500
+                  output_format: url
+              pie_chart:
+                summary: Pie Chart
+                value:
+                  chart_type: pie
+                  data:
+                    labels: ["Chrome", "Firefox", "Safari", "Edge"]
+                    datasets:
+                      - data: [65, 20, 10, 5]
+                        backgroundColor:
+                          - "rgba(255, 99, 132, 0.8)"
+                          - "rgba(54, 162, 235, 0.8)"
+                          - "rgba(255, 206, 86, 0.8)"
+                          - "rgba(75, 192, 192, 0.8)"
+                  output_format: base64
+      responses:
+        '200':
+          description: Chart generated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  chart_url:
+                    type: string
+                    format: uri
+                    description: URL to the chart image (when output_format is 'url' or 'both')
+                  chart_base64:
+                    type: string
+                    description: Base64-encoded chart (when output_format is 'base64' or 'both')
+                  file_size_bytes:
+                    type: integer
+                    example: 45678
+                  file_deletion_date:
+                    type: string
+                    format: date
+                    example: "2026-01-12"
+                  request_id:
+                    type: string
+                    format: uuid
+                  execution_time_ms:
+                    type: integer
+                    example: 892
+            image/png:
+              schema:
+                type: string
+                format: binary
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /v1/compress:
+    post:
+      tags:
+        - Image Compression
+      summary: Compress an image
+      description: |
+        Compresses an image from a URL or base64 string with adjustable quality settings.
+        Maximum file size: 3MB.
+      operationId: compressImage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                image_url:
+                  type: string
+                  format: uri
+                  description: URL of the image to compress
+                  example: "https://example.com/image.jpg"
+                base64_image:
+                  type: string
+                  description: Base64-encoded image (alternative to image_url)
+                  example: "data:image/jpeg;base64,/9j/4AAQSkZJRg..."
+                output_format:
+                  type: string
+                  enum: [url, base64]
+                  default: url
+                  description: Format of the compressed image output
+                quality:
+                  type: integer
+                  minimum: 1
+                  maximum: 100
+                  default: 85
+                  description: Compression quality (1-100, higher = better quality)
+                  example: 80
+            examples:
+              compress_from_url:
+                summary: Compress from URL
+                value:
+                  image_url: "https://example.com/large-image.jpg"
+                  output_format: url
+                  quality: 75
+              compress_from_base64:
+                summary: Compress from Base64
+                value:
+                  base64_image: "data:image/jpeg;base64,/9j/4AAQSkZJRg..."
+                  output_format: base64
+                  quality: 80
+      responses:
+        '200':
+          description: Image compressed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  compressed_image_url:
+                    type: string
+                    format: uri
+                    description: URL to compressed image (when output_format is 'url')
+                  compressed_base64_image:
+                    type: string
+                    description: Base64-encoded compressed image (when output_format is 'base64')
+                  original_size_bytes:
+                    type: integer
+                    example: 1048576
+                  compressed_size_bytes:
+                    type: integer
+                    example: 524288
+                  compressed_size_kb:
+                    type: number
+                    format: float
+                    example: 512.00
+                  compression_percentage:
+                    type: number
+                    format: float
+                    description: Percentage of size reduction
+                    example: 50.00
+                  file_deletion_date:
+                    type: string
+                    format: date
+                    example: "2026-01-12"
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /v1/pdf/merge:
+    post:
+      tags:
+        - PDF Tools
+      summary: Merge multiple PDFs
+      description: |
+        Merges multiple PDF files from URLs into a single PDF document.
+        
+        **Limits:**
+        - Maximum 15 input PDFs
+        - Maximum 200 pages per PDF
+        - Maximum 500 total pages combined
+      operationId: mergePdfs
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                urls:
+                  type: array
+                  minItems: 2
+                  maxItems: 15
+                  items:
+                    type: string
+                    format: uri
+                  description: Array of PDF URLs to merge
+                  example:
+                    - "https://example.com/doc1.pdf"
+                    - "https://example.com/doc2.pdf"
+                    - "https://example.com/doc3.pdf"
+                files:
+                  type: array
+                  minItems: 2
+                  maxItems: 15
+                  items:
+                    type: string
+                  description: Array of base64-encoded PDFs to merge
+                output:
+                  type: string
+                  description: Output type for the merged PDF
+                  enum: [url, file, base64]
+                  default: url
+      responses:
+        '200':
+          description: PDFs merged successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  merged_pdf_url:
+                    type: string
+                    format: uri
+                    example: "https://storage.pdfmunk.com/merged/abc123.pdf"
+                  merged_pdf_base64:
+                    type: string
+                    description: Base64-encoded merged PDF (when output is 'base64')
+                  content_type:
+                    type: string
+                    description: MIME type of the returned base64 payload (when output is 'base64')
+                    example: "application/pdf"
+                  filename:
+                    type: string
+                    description: Suggested filename (when output is 'base64')
+                    example: "merged.pdf"
+                  total_pages:
+                    type: integer
+                    description: Total number of pages in merged PDF
+                    example: 45
+                  num_inputs:
+                    type: integer
+                    description: Number of input PDFs merged
+                    example: 3
+                  file_deletion_date:
+                    type: string
+                    format: date
+                    example: "2026-01-12"
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /v1/pdf/split:
+    post:
+      tags:
+        - PDF Tools
+      summary: Split or extract pages from a PDF
+      description: |
+        Splits a PDF or extracts specific pages based on page ranges.
+        
+        **Page Range Format:**
+        - Single page: `"3"`
+        - Range: `"1-5"`
+        - Multiple ranges: `"1-3,5,7-10"`
+        - Open-ended: `"10-"` (from page 10 to end)
+        
+        **Limits:**
+        - Maximum 200 pages per PDF
+      operationId: splitPdf
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              properties:
+                url:
+                  type: string
+                  format: uri
+                  description: URL of the PDF to split
+                  example: "https://example.com/document.pdf"
+                file:
+                  type: string
+                  description: Base64-encoded PDF to split
+                pages:
+                  type: string
+                  description: Page range specification
+                  example: "1-5,8,10-"
+                mode:
+                  type: string
+                  description: Split mode
+                  enum: [each]
+                chunks:
+                  type: integer
+                  description: Number of chunks to split into
+                output:
+                  type: string
+                  description: Output type for the split result
+                  enum: [url, file, base64]
+                  default: url
+            examples:
+              extract_first_five:
+                summary: Extract first 5 pages
+                value:
+                  url: "https://example.com/report.pdf"
+                  pages: "1-5"
+                  output: url
+              extract_specific:
+                summary: Extract specific pages
+                value:
+                  url: "https://example.com/book.pdf"
+                  pages: "1,5,10-15,20"
+                  output: url
+      responses:
+        '200':
+          description: PDF split successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  split_pdf_url:
+                    type: string
+                    format: uri
+                    example: "https://storage.pdfmunk.com/split/xyz789.pdf"
+                  split_pdf_base64:
+                    type: string
+                    description: Base64-encoded split PDF (when output is 'base64' and a single PDF is returned)
+                  zip_base64:
+                    type: string
+                    description: Base64-encoded zip containing multiple PDFs (when output is 'base64' and multiple PDFs are returned)
+                  content_type:
+                    type: string
+                    description: MIME type of the returned base64 payload (when output is 'base64')
+                    example: "application/pdf"
+                  filename:
+                    type: string
+                    description: Suggested filename (when output is 'base64')
+                    example: "split.pdf"
+                  pages_selected:
+                    type: array
+                    items:
+                      type: integer
+                    description: Selected pages (when using 'pages')
+                    example: [1, 2, 3]
+                  files:
+                    type: array
+                    items:
+                      type: string
+                      format: uri
+                    description: List of URLs for split PDFs (when output is 'url' and multiple PDFs are returned)
+                  count:
+                    type: integer
+                    description: Number of files returned (when multiple PDFs are returned)
+                    example: 10
+                  mode:
+                    type: string
+                    description: Mode used for splitting
+                  file_deletion_date:
+                    type: string
+                    format: date
+                    example: "2026-01-12"
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /v1/unlockPdf:
+    post:
+      tags:
+        - PDF Utilities
+      summary: Unlock a password-protected PDF
+      description: |
+        Removes password protection from a PDF.
+
+        Input can be either:
+        - Multipart upload with `file`, or
+        - A `url` pointing to a PDF (JSON body or multipart form field).
+        
+        **Maximum file size:** 10MB
+      operationId: unlockPdf
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - url
+                - password
+              properties:
+                url:
+                  type: string
+                  format: uri
+                  description: Public URL to a PDF
+                  example: "https://example.com/protected.pdf"
+                password:
+                  type: string
+                  description: Password to unlock the PDF
+                  example: "secret123"
+                output:
+                  type: string
+                  enum: [url, file, base64]
+                  default: file
+                  description: Output mode
+                output_name:
+                  type: string
+                  description: Optional custom name for output file
+                  example: "unlocked_document.pdf"
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - password
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: PDF file to unlock
+                url:
+                  type: string
+                  format: uri
+                  description: URL to a PDF (alternative to file upload)
+                password:
+                  type: string
+                  description: Password to unlock the PDF
+                  example: "secret123"
+                output_name:
+                  type: string
+                  description: Optional custom name for output file
+                  example: "unlocked_document.pdf"
+                output:
+                  type: string
+                  enum: [url, file, base64]
+                  default: file
+                  description: Output mode
+      responses:
+        '200':
+          description: PDF unlocked successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  output:
+                    type: string
+                    example: url
+                  filename:
+                    type: string
+                    example: "document.pdf"
+                  url:
+                    type: string
+                    format: uri
+                    description: Present when output is `url`
+                    example: "https://storage.pdfmunk.com/unlocked/file123.pdf"
+                  content_type:
+                    type: string
+                    description: Present when output is `base64`
+                    example: "application/pdf"
+                  pdf_base64:
+                    type: string
+                    description: Present when output is `base64`
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+                description: Unlocked PDF file (when output is `file`)
+        '400':
+          description: Bad request or incorrect password
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /v1/lockPdf:
+    post:
+      tags:
+        - PDF Utilities
+      summary: Lock (encrypt) a PDF with a password
+      description: |
+        Adds password protection to a PDF.
+
+        Input can be either:
+        - Multipart upload with `file`, or
+        - A `url` pointing to a PDF (JSON body or multipart form field).
+
+        **Maximum file size:** 10MB
+      operationId: lockPdf
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - url
+                - password
+              properties:
+                url:
+                  type: string
+                  format: uri
+                  description: Public URL to a PDF
+                  example: "https://example.com/document.pdf"
+                password:
+                  type: string
+                  description: Password to set on the PDF (user password)
+                  example: "secret123"
+                input_password:
+                  type: string
+                  description: Optional password if the input PDF is already encrypted
+                  example: "existingPassword"
+                output:
+                  type: string
+                  enum: [url, file, base64]
+                  default: file
+                  description: Output mode
+                output_name:
+                  type: string
+                  description: Optional custom name for output file
+                  example: "locked_document.pdf"
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - password
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: PDF file to lock
+                url:
+                  type: string
+                  format: uri
+                  description: URL to a PDF (alternative to file upload)
+                password:
+                  type: string
+                  description: Password to set on the PDF (user password)
+                  example: "secret123"
+                input_password:
+                  type: string
+                  description: Optional password if the input PDF is already encrypted
+                  example: "existingPassword"
+                output_name:
+                  type: string
+                  description: Optional custom name for output file
+                  example: "locked_document.pdf"
+                output:
+                  type: string
+                  enum: [download, s3, url]
+                  description: |
+                    Output type:
+                    - `download`: returns the PDF file directly (alias of `file`)
+                    - `s3`/`url`: uploads to S3 and returns a URL (alias of `url`)
+                    - `file` and `base64` are also supported
+      responses:
+        '200':
+          description: PDF locked successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  output:
+                    type: string
+                  filename:
+                    type: string
+                    example: "document.pdf"
+                  url:
+                    type: string
+                    format: uri
+                    description: Present when output is `url`
+                    example: "https://storage.pdfmunk.com/locked/file123.pdf"
+                  content_type:
+                    type: string
+                    description: Present when output is `base64`
+                    example: "application/pdf"
+                  pdf_base64:
+                    type: string
+                    description: Present when output is `base64`
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+                description: Locked PDF file (when output is `file`/`download`)
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized - invalid or missing API key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '413':
+          description: Payload too large
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: Unprocessable entity - cannot lock PDF
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /v1/compressPdf:
+    post:
+      tags:
+        - PDF Utilities
+      summary: Compress a PDF
+      description: |
+        Performs a best-effort PDF optimization pass to reduce file size.
+
+        Input can be either:
+        - Multipart upload with `file`, or
+        - A `url` pointing to a PDF (JSON body or multipart form field).
+
+        Output supports: `file`, `url`, or `base64`.
+
+        **Maximum file size:** 10MB
+      operationId: compressPdf
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - url
+              properties:
+                url:
+                  type: string
+                  format: uri
+                  description: Public URL to a PDF
+                  example: "https://example.com/document.pdf"
+                compression:
+                  type: string
+                  enum: [low, medium, high, max]
+                  default: high
+                  description: Compression strength (more aggressive can be slower)
+                level:
+                  type: integer
+                  minimum: 1
+                  maximum: 4
+                  default: 4
+                  deprecated: true
+                  description: Deprecated numeric alternative to `compression`
+                output:
+                  type: string
+                  enum: [url, file, base64]
+                  default: file
+                output_name:
+                  type: string
+                  description: Optional custom name for output file
+                  example: "compressed.pdf"
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: PDF file to compress
+                url:
+                  type: string
+                  format: uri
+                  description: URL to a PDF (alternative to file upload)
+                compression:
+                  type: string
+                  enum: [low, medium, high, max]
+                  default: high
+                  description: Compression strength (more aggressive can be slower)
+                level:
+                  type: integer
+                  minimum: 1
+                  maximum: 4
+                  default: 4
+                  deprecated: true
+                  description: Deprecated numeric alternative to `compression`
+                output:
+                  type: string
+                  description: |
+                    Output mode.
+                    - `file` returns the PDF file directly (alias: `download`)
+                    - `url` uploads to S3 and returns a URL (alias: `s3`)
+                    - `base64` returns a base64-encoded PDF
+                output_name:
+                  type: string
+                  description: Optional custom name for output file
+      responses:
+        '200':
+          description: PDF compressed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  output:
+                    type: string
+                    example: url
+                  filename:
+                    type: string
+                    example: "compressed.pdf"
+                  url:
+                    type: string
+                    format: uri
+                    description: Present when output is `url`
+                  content_type:
+                    type: string
+                    description: Present when output is `base64`
+                    example: "application/pdf"
+                  pdf_base64:
+                    type: string
+                    description: Present when output is `base64`
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+                description: Compressed PDF file (when output is `file`/`download`)
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized - invalid or missing API key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '413':
+          description: Payload too large
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: Unprocessable entity - cannot compress PDF
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /v1/pdf/parse:
+    post:
+      tags:
+        - PDF Parsing
+      summary: Parse a PDF into structured JSON
+      description: |
+        Extracts text, layout-aware blocks (with normalized bounding boxes), tables, and image metadata.
+
+        Input can be either:
+        - Multipart upload with `file`, or
+        - A `url` pointing to a PDF (JSON body or multipart form field).
+
+        Modes:
+        - `text`: text only
+        - `layout`: text + text blocks with bbox
+        - `tables`: text + table blocks
+        - `full`: text + blocks + tables + images
+      operationId: pdfParse
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - url
+              properties:
+                url:
+                  type: string
+                  format: uri
+                  description: Public URL to a PDF
+                  example: "https://example.com/document.pdf"
+                mode:
+                  type: string
+                  enum: [text, layout, tables, full]
+                  default: full
+                pages:
+                  type: string
+                  description: "Page selection: 'all' or a range like '1-3' or a single page like '2'"
+                  default: all
+                  example: "1-3"
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: PDF file to parse
+                url:
+                  type: string
+                  format: uri
+                  description: URL to a PDF (alternative to file upload)
+                mode:
+                  type: string
+                  enum: [text, layout, tables, full]
+                  default: full
+                pages:
+                  type: string
+                  description: "Page selection: 'all' or a range like '1-3' or a single page like '2'"
+                  default: all
+      responses:
+        '200':
+          description: Parsed PDF
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  meta:
+                    type: object
+                    properties:
+                      pages:
+                        type: integer
+                        example: 3
+                      scanned:
+                        type: boolean
+                        example: false
+                      language:
+                        type: string
+                        example: "en"
+                  pages:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        page:
+                          type: integer
+                          example: 1
+                        text:
+                          type: string
+                        blocks:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              type:
+                                type: string
+                                enum: [paragraph, heading, table, image]
+                              text:
+                                type: string
+                                nullable: true
+                              rows:
+                                type: array
+                                nullable: true
+                                items:
+                                  type: array
+                                  items:
+                                    type: string
+                              bbox:
+                                type: array
+                                description: Normalized [x0, y0, x1, y1] in 0..1
+                                minItems: 4
+                                maxItems: 4
+                                items:
+                                  type: number
+                  images:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        image_id:
+                          type: string
+                          example: "img_1"
+                        page:
+                          type: integer
+                          example: 1
+                        bbox:
+                          type: array
+                          minItems: 4
+                          maxItems: 4
+                          items:
+                            type: number
+                        format:
+                          type: string
+                          example: "png"
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized - invalid or missing API key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '413':
+          description: Payload too large
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: Unprocessable entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /v1/url-to-html:
+    post:
+      tags:
+        - Utilities
+      summary: Fetch HTML content from a URL
+      description: |
+        Fetches and returns the HTML content of a webpage with configurable
+        wait conditions and viewport settings.
+      operationId: urlToHtml
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - url
+              properties:
+                url:
+                  type: string
+                  format: uri
+                  description: URL to fetch HTML from
+                  example: "https://example.com"
+                wait_till:
+                  type: string
+                  enum: [load, domcontentloaded, networkidle]
+                  default: load
+                  description: When to consider navigation successful
+                timeout:
+                  type: integer
+                  default: 30000
+                  description: Maximum wait time in milliseconds
+                  example: 60000
+                wait_for_selector:
+                  type: string
+                  description: CSS selector to wait for before returning HTML
+                  example: "#content"
+                wait_for_timeout:
+                  type: integer
+                  default: 0
+                  description: Additional wait time in milliseconds after page load
+                  example: 2000
+                viewport_width:
+                  type: integer
+                  default: 1920
+                  description: Viewport width
+                  example: 1920
+                viewport_height:
+                  type: integer
+                  default: 1080
+                  description: Viewport height
+                  example: 1080
+                user_agent:
+                  type: string
+                  description: Custom user agent string
+                  example: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+                headers:
+                  type: object
+                  description: Additional HTTP headers
+                  additionalProperties:
+                    type: string
+                  example:
+                    Accept-Language: "en-US"
+            examples:
+              simple_fetch:
+                summary: Simple fetch
+                value:
+                  url: "https://example.com"
+              wait_for_element:
+                summary: Wait for specific element
+                value:
+                  url: "https://example.com/products"
+                  wait_till: networkidle
+                  wait_for_selector: ".product-list"
+                  wait_for_timeout: 1000
+      responses:
+        '200':
+          description: HTML fetched successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  url:
+                    type: string
+                    format: uri
+                    example: "https://example.com"
+                  html:
+                    type: string
+                    description: The HTML content of the page
+                  timestamp:
+                    type: integer
+                    description: Unix timestamp when content was fetched
+                    example: 1702473600
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: CLIENT-API-KEY
+      description: API key for authentication. Get your key from https://pdfmunk.com/dashboard
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+          example: "Invalid API key"
+        success:
+          type: boolean
+          example: false
+        details:
+          type: string
+          description: Additional error details (optional)
+      required:
+        - error
+        - success

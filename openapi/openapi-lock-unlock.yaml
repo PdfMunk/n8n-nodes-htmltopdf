@@ -1,0 +1,320 @@
+openapi: 3.0.3
+info:
+  title: PDFMunk Lock/Unlock API
+  version: 1.0.0
+  description: |
+    Lock (encrypt) and unlock password-protected PDFs.
+
+    ## Authentication
+    All endpoints require a `CLIENT-API-KEY` header for authentication.
+servers:
+  - url: https://pdfmunk.com/api
+    description: Production
+
+security:
+  - ApiKeyAuth: []
+
+tags:
+  - name: PDF Utilities
+    description: Unlock and lock PDFs
+
+paths:
+  /v1/unlockPdf:
+    post:
+      tags:
+        - PDF Utilities
+      summary: Unlock a password-protected PDF
+      description: |
+        Removes password protection from a PDF.
+
+        Input can be either:
+        - Multipart upload with `file`, or
+        - A `url` pointing to a PDF (JSON body or multipart form field).
+
+        **Maximum file size:** 10MB
+      operationId: unlockPdf
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - url
+                - password
+              properties:
+                url:
+                  type: string
+                  format: uri
+                  description: Public URL to a PDF
+                  example: https://example.com/protected.pdf
+                password:
+                  type: string
+                  description: Password to unlock the PDF
+                  example: secret123
+                output:
+                  type: string
+                  enum: [url, file, base64]
+                  default: file
+                  description: Output mode
+                output_name:
+                  type: string
+                  description: Optional custom name for output file
+                  example: unlocked_document.pdf
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - password
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: PDF file to unlock
+                url:
+                  type: string
+                  format: uri
+                  description: URL to a PDF (alternative to file upload)
+                password:
+                  type: string
+                  description: Password to unlock the PDF
+                  example: secret123
+                output_name:
+                  type: string
+                  description: Optional custom name for output file
+                  example: unlocked_document.pdf
+                output:
+                  type: string
+                  enum: [url, file, base64]
+                  default: file
+                  description: Output mode
+      responses:
+        '200':
+          description: PDF unlocked successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  output:
+                    type: string
+                    example: url
+                  filename:
+                    type: string
+                    example: document.pdf
+                  url:
+                    type: string
+                    format: uri
+                    description: Present when output is `url`
+                    example: https://storage.pdfmunk.com/unlocked/file123.pdf
+                  content_type:
+                    type: string
+                    description: Present when output is `base64`
+                    example: application/pdf
+                  pdf_base64:
+                    type: string
+                    description: Present when output is `base64`
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+                description: Unlocked PDF file (when output is `file`)
+        '400':
+          description: Bad request or incorrect password
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized - invalid or missing API key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '413':
+          description: Payload too large
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /v1/lockPdf:
+    post:
+      tags:
+        - PDF Utilities
+      summary: Lock (encrypt) a PDF with a password
+      description: |
+        Adds password protection to a PDF.
+
+        Input can be either:
+        - Multipart upload with `file`, or
+        - A `url` pointing to a PDF (JSON body or multipart form field).
+
+        If the input PDF is already encrypted, you can optionally pass `input_password`.
+
+        **Maximum file size:** 10MB
+      operationId: lockPdf
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - url
+                - password
+              properties:
+                url:
+                  type: string
+                  format: uri
+                  description: Public URL to a PDF
+                  example: https://example.com/document.pdf
+                password:
+                  type: string
+                  description: Password to set on the PDF (user password)
+                  example: secret123
+                input_password:
+                  type: string
+                  description: Optional password if the input PDF is already encrypted
+                  example: existingPassword
+                output:
+                  type: string
+                  enum: [url, file, base64]
+                  default: file
+                  description: Output mode
+                output_name:
+                  type: string
+                  description: Optional custom name for output file
+                  example: locked_document.pdf
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - password
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: PDF file to lock
+                url:
+                  type: string
+                  format: uri
+                  description: URL to a PDF (alternative to file upload)
+                password:
+                  type: string
+                  description: Password to set on the PDF (user password)
+                  example: secret123
+                input_password:
+                  type: string
+                  description: Optional password if the input PDF is already encrypted
+                  example: existingPassword
+                output_name:
+                  type: string
+                  description: Optional custom name for output file
+                  example: locked_document.pdf
+                output:
+                  type: string
+                  description: |
+                    Output mode.
+                    - `file` returns the PDF file directly (aliases: `download`)
+                    - `url` uploads to S3 and returns a URL (aliases: `s3`)
+                    - `base64` returns a base64-encoded PDF
+      responses:
+        '200':
+          description: PDF locked successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  output:
+                    type: string
+                    example: url
+                  filename:
+                    type: string
+                    example: document.pdf
+                  url:
+                    type: string
+                    format: uri
+                    description: Present when output is `url`
+                    example: https://storage.pdfmunk.com/locked/file123.pdf
+                  content_type:
+                    type: string
+                    description: Present when output is `base64`
+                    example: application/pdf
+                  pdf_base64:
+                    type: string
+                    description: Present when output is `base64`
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+                description: Locked PDF file (when output is `file`/`download`)
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized - invalid or missing API key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '413':
+          description: Payload too large
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: Unprocessable entity - cannot lock PDF
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: CLIENT-API-KEY
+      description: API key for authentication. Get your key from https://pdfmunk.com/dashboard
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+          example: Invalid API key
+        success:
+          type: boolean
+          example: false
+        details:
+          type: string
+          description: Additional error details (optional)
+      required:
+        - error
+        - success
