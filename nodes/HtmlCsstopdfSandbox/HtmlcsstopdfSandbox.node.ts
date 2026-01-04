@@ -43,7 +43,7 @@ function uint8ToBase64(bytes: Uint8Array): string {
 	return output;
 }
 
-function base64ToUint8(base64Input: string): Uint8Array {
+function base64ToUint8(base64Input: string, node: unknown, itemIndex?: number): Uint8Array {
 	const base64 = base64Input.replace(/\s+/g, '');
 	if (base64.length === 0) return new Uint8Array();
 
@@ -63,7 +63,9 @@ function base64ToUint8(base64Input: string): Uint8Array {
 		const n2 = c2 === '=' ? 0 : BASE64_ALPHABET.indexOf(c2);
 		const n3 = c3 === '=' ? 0 : BASE64_ALPHABET.indexOf(c3);
 		if (n0 < 0 || n1 < 0 || n2 < 0 || n3 < 0) {
-			throw new Error('Invalid base64 input');
+			throw new NodeOperationError(node as any, 'Invalid base64 input',
+				itemIndex === undefined ? {} : { itemIndex },
+			);
 		}
 
 		const triple = (n0 << 18) | (n1 << 12) | (n2 << 6) | n3;
@@ -112,7 +114,7 @@ export class Htmlcsstopdf implements INodeType {
 		outputs: [NodeConnectionType.Main],
 		credentials: [
 			{
-				name: 'htmlcsstopdfApiSandbox',
+				name: 'htmlcsstopdfSandboxApi',
 				required: true,
 			},
 		],
@@ -141,7 +143,7 @@ export class Htmlcsstopdf implements INodeType {
 						value: RESOURCES.PDF_EXTRACTION_PARSING,
 					},
 				],
-				default: RESOURCES.PDF_CREATION_CONVERSION,
+				default: 'pdfCreationConversion',
 			},
 			{
 				displayName: 'Operation',
@@ -163,7 +165,6 @@ export class Htmlcsstopdf implements INodeType {
 					{
 						name: 'Capture Website Screenshot to PDF',
 						value: OPERATIONS.CAPTURE_WEBSITE_SCREENSHOT_TO_PDF,
-						description: 'Capture website screenshot to PDF',
 						action: 'Capture website screenshot to PDF',
 						displayOptions: {
 							show: {
@@ -238,7 +239,7 @@ export class Htmlcsstopdf implements INodeType {
 						},
 					},
 				],
-				default: OPERATIONS.CONVERT_HTML_TO_PDF,
+				default: 'htmlToPdf',
 			},
 			// Properties for HTML to Image
 			{
@@ -366,7 +367,7 @@ export class Htmlcsstopdf implements INodeType {
 					{ name: 'URL', value: PDF_INPUT_TYPES.URL },
 					{ name: 'Binary', value: PDF_INPUT_TYPES.BINARY },
 				],
-				default: PDF_INPUT_TYPES.URL,
+				default: 'url',
 				displayOptions: {
 					show: {
 						operation: [
@@ -427,7 +428,7 @@ export class Htmlcsstopdf implements INodeType {
 					{ name: 'Binary File', value: PDF_OUTPUT_TYPES.FILE },
 					{ name: 'Base64', value: PDF_OUTPUT_TYPES.BASE64 },
 				],
-				default: PDF_OUTPUT_TYPES.URL,
+				default: 'url',
 				description: 'How the API should return the output',
 				displayOptions: {
 					show: {
@@ -488,7 +489,7 @@ export class Htmlcsstopdf implements INodeType {
 					{ name: 'Input Items (Binary)', value: MERGE_SOURCES.INPUT_ITEMS_BINARY },
 					{ name: 'URLs', value: MERGE_SOURCES.URLS },
 				],
-				default: MERGE_SOURCES.INPUT_ITEMS_BINARY,
+				default: 'itemsBinary',
 				description: 'Where to read PDFs to merge from',
 				displayOptions: {
 					show: {
@@ -551,7 +552,7 @@ export class Htmlcsstopdf implements INodeType {
 					{ name: 'Split Each Page', value: SPLIT_MODES.EACH },
 					{ name: 'Split Into Chunks', value: SPLIT_MODES.CHUNKS },
 				],
-				default: SPLIT_MODES.PAGES,
+				default: 'pages',
 				displayOptions: {
 					show: {
 						resource: [RESOURCES.PDF_MANIPULATION],
@@ -681,7 +682,7 @@ export class Htmlcsstopdf implements INodeType {
 		const returnData: INodeExecutionData[] = [];
 
 		const requestJson = async (url: string, body: Record<string, unknown>) =>
-			await this.helpers.httpRequestWithAuthentication.call(this, 'htmlcsstopdfApiSandbox', {
+			await this.helpers.httpRequestWithAuthentication.call(this, 'htmlcsstopdfSandboxApi', {
 				method: 'POST',
 				url,
 				body,
@@ -689,7 +690,7 @@ export class Htmlcsstopdf implements INodeType {
 			});
 
 		const requestMultipart = async (url: string, formData: Record<string, any>, expectBinary: boolean) =>
-			await this.helpers.httpRequestWithAuthentication.call(this, 'htmlcsstopdfApiSandbox', {
+			await this.helpers.httpRequestWithAuthentication.call(this, 'htmlcsstopdfSandboxApi', {
 				method: 'POST',
 				url,
 				// `formData` is supported by n8n request helpers but may be missing from typings
@@ -735,7 +736,7 @@ export class Htmlcsstopdf implements INodeType {
 
 						responseData = await this.helpers.httpRequestWithAuthentication.call(
 							this,
-							'htmlcsstopdfApiSandbox',
+							'htmlcsstopdfSandboxApi',
 							{
 								method: 'POST',
 								url: 'https://pdfmunk.com/api/v1/generatePdf',
@@ -757,7 +758,7 @@ export class Htmlcsstopdf implements INodeType {
 
 						responseData = await this.helpers.httpRequestWithAuthentication.call(
 							this,
-							'htmlcsstopdfApiSandbox',
+							'htmlcsstopdfSandboxApi',
 							{
 								method: 'POST',
 								url: 'https://pdfmunk.com/api/v1/generatePdf',
@@ -821,7 +822,14 @@ export class Htmlcsstopdf implements INodeType {
 							if (base64) {
 								delete json.merged_pdf_base64;
 								returnData.push(
-									await toBinaryItem(i, base64ToUint8(base64), binaryPropertyName, requestedName, 'application/pdf', json),
+									await toBinaryItem(
+										i,
+										base64ToUint8(base64, this.getNode(), i),
+										binaryPropertyName,
+										requestedName,
+										'application/pdf',
+										json,
+									),
 								);
 								handled = true;
 							}
@@ -866,7 +874,14 @@ export class Htmlcsstopdf implements INodeType {
 								const base64 = json.split_pdf_base64 as string;
 								delete json.split_pdf_base64;
 								returnData.push(
-									await toBinaryItem(i, base64ToUint8(base64), binaryPropertyName, requestedName, 'application/pdf', json),
+									await toBinaryItem(
+										i,
+										base64ToUint8(base64, this.getNode(), i),
+										binaryPropertyName,
+										requestedName,
+										'application/pdf',
+										json,
+									),
 								);
 								handled = true;
 							} else if (typeof json.zip_base64 === 'string' && json.zip_base64.length > 0) {
@@ -874,7 +889,14 @@ export class Htmlcsstopdf implements INodeType {
 								delete json.zip_base64;
 								const zipName = requestedName.endsWith('.zip') ? requestedName : 'split.zip';
 								returnData.push(
-									await toBinaryItem(i, base64ToUint8(base64), binaryPropertyName, zipName, 'application/zip', json),
+									await toBinaryItem(
+										i,
+										base64ToUint8(base64, this.getNode(), i),
+										binaryPropertyName,
+										zipName,
+										'application/zip',
+										json,
+									),
 								);
 								handled = true;
 							}

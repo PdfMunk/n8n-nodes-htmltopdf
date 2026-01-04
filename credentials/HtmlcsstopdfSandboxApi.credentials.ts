@@ -5,9 +5,9 @@ import {
 	INodeProperties,
 } from 'n8n-workflow';
 
-export class HtmlcsstopdfApi implements ICredentialType {
-	name = 'htmlcsstopdfApiSandbox';
-	displayName = 'HTML to PDF API (Sandbox)';
+export class HtmlcsstopdfSandboxApi implements ICredentialType {
+	name = 'htmlcsstopdfSandboxApi';
+	displayName = 'HTML to PDF (Sandbox) API';
 	documentationUrl = 'https://www.pdfmunk.com/api-docs';
 	properties: INodeProperties[] = [
 		{

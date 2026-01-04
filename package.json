@@ -1,6 +1,6 @@
 {
   "name": "n8n-nodes-htmlcsstopdf-sandbox",
-  "version": "2.0.4",
+  "version": "2.0.6",
   "description": "n8n community node to convert HTML and CSS to PDF using PdfMunk API - perfect for invoices, reports, certificates, and document generation",
   "keywords": [
     "n8n-community-node-package",
@@ -47,15 +47,16 @@
     "prepublishOnly": "npm run build && npm run lint -c .eslintrc.prepublish.js nodes credentials package.json"
   },
   "files": [
-    "dist"
+    "dist",
+    "index.js"
   ],
   "n8n": {
     "n8nNodesApiVersion": 1,
     "credentials": [
-      "dist/credentials/HtmlcsstopdfApi.credentials.js"
+      "dist/credentials/HtmlcsstopdfSandboxApi.credentials.js"
     ],
     "nodes": [
-      "dist/nodes/HtmlCsstopdf/Htmlcsstopdf.node.js"
+      "dist/nodes/HtmlCsstopdfSandbox/HtmlcsstopdfSandbox.node.js"
     ]
   },
   "devDependencies": {
