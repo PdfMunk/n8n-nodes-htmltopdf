@@ -43,6 +43,11 @@ export class Htmlcsstopdf implements INodeType {
 						value: 'pdfManipulation',
 						description: 'Merge, split, or compress PDF documents',
 					},
+					{
+						name: 'PDF Security',
+						value: 'pdfSecurity',
+						description: 'Lock and unlock password-protected PDFs',
+					},
 				],
 				default: 'pdfCreation',
 			},
@@ -105,6 +110,33 @@ export class Htmlcsstopdf implements INodeType {
 					},
 				],
 				default: 'mergePdfs',
+			},
+			// PDF Security Operations
+			{
+				displayName: 'Operation',
+				name: 'operation',
+				type: 'options',
+				noDataExpression: true,
+				displayOptions: {
+					show: {
+						resource: ['pdfSecurity'],
+					},
+				},
+				options: [
+					{
+						name: 'Lock PDF',
+						value: 'lockPdf',
+						description: 'Add password protection to a PDF',
+						action: 'Lock PDF with password',
+					},
+					{
+						name: 'Unlock PDF',
+						value: 'unlockPdf',
+						description: 'Remove password protection from a PDF',
+						action: 'Unlock password-protected PDF',
+					},
+				],
+				default: 'lockPdf',
 			},
 			// Properties for HTML to PDF
 			{
@@ -432,6 +464,135 @@ export class Htmlcsstopdf implements INodeType {
 					},
 				},
 			},
+			// Properties for Lock PDF
+			{
+				displayName: 'PDF URL',
+				name: 'lock_url',
+				type: 'string',
+				default: '',
+				description: 'URL of the PDF to lock (max 10MB)',
+				displayOptions: {
+					show: {
+						operation: ['lockPdf'],
+					},
+				},
+			},
+			{
+				displayName: 'Password',
+				name: 'lock_password',
+				type: 'string',
+				typeOptions: {
+					password: true,
+				},
+				default: '',
+				description: 'Password to set on the PDF',
+				displayOptions: {
+					show: {
+						operation: ['lockPdf'],
+					},
+				},
+			},
+			{
+				displayName: 'Input Password',
+				name: 'lock_input_password',
+				type: 'string',
+				typeOptions: {
+					password: true,
+				},
+				default: '',
+				description: 'Optional password if the input PDF is already encrypted',
+				displayOptions: {
+					show: {
+						operation: ['lockPdf'],
+					},
+				},
+			},
+			{
+				displayName: 'Output Type',
+				name: 'lock_output',
+				type: 'options',
+				options: [
+					{ name: 'URL', value: 'url' },
+					{ name: 'File', value: 'file' },
+					{ name: 'Base64', value: 'base64' },
+				],
+				default: 'file',
+				description: 'Format of the locked PDF output',
+				displayOptions: {
+					show: {
+						operation: ['lockPdf'],
+					},
+				},
+			},
+			{
+				displayName: 'Output Filename',
+				name: 'lock_output_name',
+				type: 'string',
+				default: 'locked.pdf',
+				description: 'Custom name for the output file',
+				displayOptions: {
+					show: {
+						operation: ['lockPdf'],
+					},
+				},
+			},
+			// Properties for Unlock PDF
+			{
+				displayName: 'PDF URL',
+				name: 'unlock_url',
+				type: 'string',
+				default: '',
+				description: 'URL of the password-protected PDF to unlock (max 10MB)',
+				displayOptions: {
+					show: {
+						operation: ['unlockPdf'],
+					},
+				},
+			},
+			{
+				displayName: 'Password',
+				name: 'unlock_password',
+				type: 'string',
+				typeOptions: {
+					password: true,
+				},
+				default: '',
+				description: 'Password to unlock the PDF',
+				displayOptions: {
+					show: {
+						operation: ['unlockPdf'],
+					},
+				},
+			},
+			{
+				displayName: 'Output Type',
+				name: 'unlock_output',
+				type: 'options',
+				options: [
+					{ name: 'URL', value: 'url' },
+					{ name: 'File', value: 'file' },
+					{ name: 'Base64', value: 'base64' },
+				],
+				default: 'file',
+				description: 'Format of the unlocked PDF output',
+				displayOptions: {
+					show: {
+						operation: ['unlockPdf'],
+					},
+				},
+			},
+			{
+				displayName: 'Output Filename',
+				name: 'unlock_output_name',
+				type: 'string',
+				default: 'unlocked.pdf',
+				description: 'Custom name for the output file',
+				displayOptions: {
+					show: {
+						operation: ['unlockPdf'],
+					},
+				},
+			},
 		],
 	};
 
@@ -688,6 +849,116 @@ export class Htmlcsstopdf implements INodeType {
 								{
 									method: 'POST',
 									url: 'https://pdfmunk.com/api/v1/compressPdf',
+									body,
+									json: true,
+								},
+							);
+							returnData.push({ json: responseData, pairedItem: { item: i } });
+						}
+					}
+				} else if (resource === 'pdfSecurity') {
+					// Handle PDF Security operations
+					if (operation === 'lockPdf') {
+						const pdfUrl = this.getNodeParameter('lock_url', i) as string;
+						const password = this.getNodeParameter('lock_password', i) as string;
+						const inputPassword = this.getNodeParameter('lock_input_password', i, '') as string;
+						const outputType = this.getNodeParameter('lock_output', i) as string;
+						const outputName = this.getNodeParameter('lock_output_name', i) as string;
+
+						const body: Record<string, unknown> = {
+							url: pdfUrl,
+							password,
+							output: outputType,
+							output_name: outputName,
+						};
+
+						if (inputPassword) {
+							body.input_password = inputPassword;
+						}
+
+						if (outputType === 'file') {
+							const responseData = await this.helpers.httpRequestWithAuthentication.call(
+								this,
+								'htmlcsstopdfApi',
+								{
+									method: 'POST',
+									url: 'https://pdfmunk.com/api/v1/lockPdf',
+									body,
+									json: true,
+									encoding: 'arraybuffer',
+									returnFullResponse: true,
+								},
+							);
+
+							const binaryData = await this.helpers.prepareBinaryData(
+								Buffer.from(responseData.body as ArrayBuffer),
+								outputName,
+								'application/pdf',
+							);
+
+							returnData.push({
+								json: { success: true },
+								binary: { data: binaryData },
+								pairedItem: { item: i },
+							});
+						} else {
+							const responseData = await this.helpers.httpRequestWithAuthentication.call(
+								this,
+								'htmlcsstopdfApi',
+								{
+									method: 'POST',
+									url: 'https://pdfmunk.com/api/v1/lockPdf',
+									body,
+									json: true,
+								},
+							);
+							returnData.push({ json: responseData, pairedItem: { item: i } });
+						}
+					} else if (operation === 'unlockPdf') {
+						const pdfUrl = this.getNodeParameter('unlock_url', i) as string;
+						const password = this.getNodeParameter('unlock_password', i) as string;
+						const outputType = this.getNodeParameter('unlock_output', i) as string;
+						const outputName = this.getNodeParameter('unlock_output_name', i) as string;
+
+						const body = {
+							url: pdfUrl,
+							password,
+							output: outputType,
+							output_name: outputName,
+						};
+
+						if (outputType === 'file') {
+							const responseData = await this.helpers.httpRequestWithAuthentication.call(
+								this,
+								'htmlcsstopdfApi',
+								{
+									method: 'POST',
+									url: 'https://pdfmunk.com/api/v1/unlockPdf',
+									body,
+									json: true,
+									encoding: 'arraybuffer',
+									returnFullResponse: true,
+								},
+							);
+
+							const binaryData = await this.helpers.prepareBinaryData(
+								Buffer.from(responseData.body as ArrayBuffer),
+								outputName,
+								'application/pdf',
+							);
+
+							returnData.push({
+								json: { success: true },
+								binary: { data: binaryData },
+								pairedItem: { item: i },
+							});
+						} else {
+							const responseData = await this.helpers.httpRequestWithAuthentication.call(
+								this,
+								'htmlcsstopdfApi',
+								{
+									method: 'POST',
+									url: 'https://pdfmunk.com/api/v1/unlockPdf',
 									body,
 									json: true,
 								},
