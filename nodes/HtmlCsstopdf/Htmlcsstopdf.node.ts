@@ -78,7 +78,7 @@ export class Htmlcsstopdf implements INodeType {
 						name: 'URL to PDF',
 						value: 'urlToPdf',
 						description: 'Capture Website Screenshot to PDF',
-						action: 'Capture website to PDF',
+						action: 'Capture a screenshot of a website in PDF format',
 					},
 				],
 				default: 'htmlToPdf',
