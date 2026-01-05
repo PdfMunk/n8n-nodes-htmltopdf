@@ -99,7 +99,7 @@ export class Htmlcsstopdf implements INodeType {
 						name: 'Merge PDFs',
 						value: 'mergePdfs',
 						description: 'Merge multiple PDF files into one',
-						action: 'Merge multiple PDFs',
+						action: 'Merge multiple PDFS into one',
 					},
 					{
 						name: 'Split PDF',
@@ -138,7 +138,7 @@ export class Htmlcsstopdf implements INodeType {
 						name: 'Unlock PDF',
 						value: 'unlockPdf',
 						description: 'Remove password protection from a PDF',
-						action: 'Unlock password-protected PDF',
+						action: 'Unlock password protected PDF',
 					},
 				],
 				default: 'lockPdf',
