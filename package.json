@@ -1,6 +1,6 @@
 {
   "name": "n8n-nodes-htmlcsstopdf",
-  "version": "2.2.0",
+  "version": "3.0.0",
   "description": "n8n community node to convert HTML and CSS to PDF using PdfMunk API - perfect for invoices, reports, certificates, and document generation",
   "keywords": [
     "n8n-community-node-package",
@@ -22,7 +22,16 @@
     "pdf-from-html",
     "business-documents",
     "dynamic-pdf",
-    "pdf-reports"
+    "pdf-reports",
+    "split-pdf",
+    "merge-pdf",
+    "pdf-integration",
+    "pdf-parser",
+    "pdfparse",
+    "compresspdf",
+    "compress-pdf",
+    "lockpdf",
+    "unlockpdf"
   ],
   "license": "MIT",
   "homepage": "https://github.com/PdfMunk/n8n-nodes-htmltopdf#readme",
@@ -59,7 +68,7 @@
     ]
   },
   "devDependencies": {
-    "@types/node": "^24.10.1",
+    "@types/node": "^24.10.4",
     "@typescript-eslint/parser": "~8.32.0",
     "eslint": "^8.57.0",
     "eslint-plugin-n8n-nodes-base": "^1.16.3",
