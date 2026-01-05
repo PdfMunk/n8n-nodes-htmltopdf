@@ -48,6 +48,11 @@ export class Htmlcsstopdf implements INodeType {
 						value: 'pdfSecurity',
 						description: 'Lock and unlock password-protected PDFs',
 					},
+					{
+						name: 'PDF Extraction & Parsing',
+						value: 'pdfParsing',
+						description: 'Parse PDFs into structured JSON data',
+					},
 				],
 				default: 'pdfCreation',
 			},
@@ -137,6 +142,27 @@ export class Htmlcsstopdf implements INodeType {
 					},
 				],
 				default: 'lockPdf',
+			},
+			// PDF Parsing Operations
+			{
+				displayName: 'Operation',
+				name: 'operation',
+				type: 'options',
+				noDataExpression: true,
+				displayOptions: {
+					show: {
+						resource: ['pdfParsing'],
+					},
+				},
+				options: [
+					{
+						name: 'Parse PDF',
+						value: 'parsePdf',
+						description: 'Extract structured data from PDF',
+						action: 'Parse PDF to JSON',
+					},
+				],
+				default: 'parsePdf',
 			},
 			// Properties for HTML to PDF
 			{
@@ -593,6 +619,49 @@ export class Htmlcsstopdf implements INodeType {
 					},
 				},
 			},
+			// Properties for Parse PDF
+			{
+				displayName: 'PDF URL',
+				name: 'parse_url',
+				type: 'string',
+				default: '',
+				description: 'URL of the PDF to parse',
+				displayOptions: {
+					show: {
+						operation: ['parsePdf'],
+					},
+				},
+			},
+			{
+				displayName: 'Parse Mode',
+				name: 'parse_mode',
+				type: 'options',
+				options: [
+					{ name: 'Text Only', value: 'text', description: 'Extract text only' },
+					{ name: 'Layout', value: 'layout', description: 'Text + text blocks with bounding boxes' },
+					{ name: 'Tables', value: 'tables', description: 'Text + table blocks' },
+					{ name: 'Full', value: 'full', description: 'Text + blocks + tables + images' },
+				],
+				default: 'full',
+				description: 'What to extract from the PDF',
+				displayOptions: {
+					show: {
+						operation: ['parsePdf'],
+					},
+				},
+			},
+			{
+				displayName: 'Pages',
+				name: 'parse_pages',
+				type: 'string',
+				default: 'all',
+				description: 'Page selection: "all" or a range like "1-3" or single page like "2"',
+				displayOptions: {
+					show: {
+						operation: ['parsePdf'],
+					},
+				},
+			},
 		],
 	};
 
@@ -965,6 +1034,32 @@ export class Htmlcsstopdf implements INodeType {
 							);
 							returnData.push({ json: responseData, pairedItem: { item: i } });
 						}
+					}
+				} else if (resource === 'pdfParsing') {
+					// Handle PDF Parsing operations
+					if (operation === 'parsePdf') {
+						const pdfUrl = this.getNodeParameter('parse_url', i) as string;
+						const mode = this.getNodeParameter('parse_mode', i) as string;
+						const pages = this.getNodeParameter('parse_pages', i) as string;
+
+						const body = {
+							url: pdfUrl,
+							mode,
+							pages,
+						};
+
+						const responseData = await this.helpers.httpRequestWithAuthentication.call(
+							this,
+							'htmlcsstopdfApi',
+							{
+								method: 'POST',
+								url: 'https://pdfmunk.com/api/v1/pdf/parse',
+								body,
+								json: true,
+							},
+						);
+
+						returnData.push({ json: responseData, pairedItem: { item: i } });
 					}
 				}
 			} catch (error) {
