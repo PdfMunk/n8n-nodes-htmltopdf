@@ -33,17 +33,12 @@ export class HtmlcsstopdfApi implements ICredentialType {
 	test: ICredentialTestRequest = {
 		request: {
 			baseURL: 'https://pdfmunk.com',
-			url: '/api/v1/generatePdf',
-			method: 'POST',
+			url: '/api/v1/whoami',
+			method: 'GET',
 			headers: {
 				'CLIENT-API-KEY': '={{$credentials.apiKey}}',
 				'Content-Type': 'application/json',
-			},
-			body: {
-				html_content: '<div></div>',
-				css_content: '',
-				response_format: 'url',
-			},
+			}
 		},
 	};
 } 
