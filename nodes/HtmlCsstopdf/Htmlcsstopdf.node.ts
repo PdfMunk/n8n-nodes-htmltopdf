@@ -1,4 +1,5 @@
 import type {
+	IDataObject,
 	IExecuteFunctions,
 	INodeExecutionData,
 	INodeType,
@@ -669,6 +670,30 @@ export class Htmlcsstopdf implements INodeType {
 		const items = this.getInputData();
 		const returnData: INodeExecutionData[] = [];
 
+		const toJsonObject = (body: unknown): IDataObject => {
+			if (typeof body === 'object' && body !== null && !Array.isArray(body)) {
+				return body as IDataObject;
+			}
+			return { body: body as unknown as IDataObject };
+		};
+
+		const parseArrayBufferBody = (body: unknown): IDataObject => {
+			try {
+				if (!(body instanceof ArrayBuffer)) {
+					return toJsonObject(body);
+				}
+				const text = Buffer.from(body).toString('utf8').trim();
+				if (text === '') return {};
+				try {
+					return toJsonObject(JSON.parse(text));
+				} catch {
+					return { error: text };
+				}
+			} catch {
+				return { error: 'Unable to parse error response' };
+			}
+		};
+
 		for (let i = 0; i < items.length; i++) {
 			try {
 				const resource = this.getNodeParameter('resource', i) as string;
@@ -720,11 +745,22 @@ export class Htmlcsstopdf implements INodeType {
 								url: 'https://pdfmunk.com/api/v1/generatePdf',
 								body,
 								json: true,
+								simple: false,
 								encoding: 'arraybuffer',
 								returnFullResponse: true,
 								timeout,
-							},
+							} as any,
 						);
+
+						const statusCode = (responseData as { statusCode?: number }).statusCode ?? 0;
+						if (statusCode >= 400) {
+							const errorBody = parseArrayBufferBody((responseData as { body?: unknown }).body);
+							returnData.push({
+								json: { ...errorBody, statusCode },
+								pairedItem: { item: i },
+							});
+							continue;
+						}
 
 						const binaryData = await this.helpers.prepareBinaryData(
 							Buffer.from(responseData.body as ArrayBuffer),
@@ -746,10 +782,17 @@ export class Htmlcsstopdf implements INodeType {
 								url: 'https://pdfmunk.com/api/v1/generatePdf',
 								body,
 								json: true,
+								simple: false,
+								returnFullResponse: true,
 								timeout,
-							},
+							} as any,
 						);
-						returnData.push({ json: responseData, pairedItem: { item: i } });
+						const statusCode = (responseData as { statusCode?: number }).statusCode ?? 0;
+						const bodyData = toJsonObject((responseData as { body?: unknown }).body);
+						returnData.push({
+							json: statusCode >= 400 ? { ...bodyData, statusCode } : bodyData,
+							pairedItem: { item: i },
+						});
 					}
 				} else if (resource === 'pdfManipulation') {
 					// Handle PDF Manipulation operations
@@ -788,10 +831,21 @@ export class Htmlcsstopdf implements INodeType {
 									url: 'https://pdfmunk.com/api/v1/pdf/merge',
 									body,
 									json: true,
+									simple: false,
 									encoding: 'arraybuffer',
 									returnFullResponse: true,
-								},
+								} as any,
 							);
+
+							const statusCode = (responseData as { statusCode?: number }).statusCode ?? 0;
+							if (statusCode >= 400) {
+								const errorBody = parseArrayBufferBody((responseData as { body?: unknown }).body);
+								returnData.push({
+									json: { ...errorBody, statusCode },
+									pairedItem: { item: i },
+								});
+								continue;
+							}
 
 							const binaryData = await this.helpers.prepareBinaryData(
 								Buffer.from(responseData.body as ArrayBuffer),
@@ -813,9 +867,16 @@ export class Htmlcsstopdf implements INodeType {
 									url: 'https://pdfmunk.com/api/v1/pdf/merge',
 									body,
 									json: true,
-								},
+									simple: false,
+									returnFullResponse: true,
+								} as any,
 							);
-							returnData.push({ json: responseData, pairedItem: { item: i } });
+							const statusCode = (responseData as { statusCode?: number }).statusCode ?? 0;
+							const bodyData = toJsonObject((responseData as { body?: unknown }).body);
+							returnData.push({
+								json: statusCode >= 400 ? { ...bodyData, statusCode } : bodyData,
+								pairedItem: { item: i },
+							});
 						}
 					} else if (operation === 'splitPdf') {
 						const pdfUrl = this.getNodeParameter('split_url', i) as string;
@@ -844,10 +905,21 @@ export class Htmlcsstopdf implements INodeType {
 									url: 'https://pdfmunk.com/api/v1/pdf/split',
 									body,
 									json: true,
+									simple: false,
 									encoding: 'arraybuffer',
 									returnFullResponse: true,
-								},
+								} as any,
 							);
+
+							const statusCode = (responseData as { statusCode?: number }).statusCode ?? 0;
+							if (statusCode >= 400) {
+								const errorBody = parseArrayBufferBody((responseData as { body?: unknown }).body);
+								returnData.push({
+									json: { ...errorBody, statusCode },
+									pairedItem: { item: i },
+								});
+								continue;
+							}
 
 							const binaryData = await this.helpers.prepareBinaryData(
 								Buffer.from(responseData.body as ArrayBuffer),
@@ -869,9 +941,16 @@ export class Htmlcsstopdf implements INodeType {
 									url: 'https://pdfmunk.com/api/v1/pdf/split',
 									body,
 									json: true,
-								},
+									simple: false,
+									returnFullResponse: true,
+								} as any,
 							);
-							returnData.push({ json: responseData, pairedItem: { item: i } });
+							const statusCode = (responseData as { statusCode?: number }).statusCode ?? 0;
+							const bodyData = toJsonObject((responseData as { body?: unknown }).body);
+							returnData.push({
+								json: statusCode >= 400 ? { ...bodyData, statusCode } : bodyData,
+								pairedItem: { item: i },
+							});
 						}
 					} else if (operation === 'compressPdf') {
 						const pdfUrl = this.getNodeParameter('compress_url', i) as string;
@@ -895,10 +974,21 @@ export class Htmlcsstopdf implements INodeType {
 									url: 'https://pdfmunk.com/api/v1/compressPdf',
 									body,
 									json: true,
+									simple: false,
 									encoding: 'arraybuffer',
 									returnFullResponse: true,
-								},
+								} as any,
 							);
+
+							const statusCode = (responseData as { statusCode?: number }).statusCode ?? 0;
+							if (statusCode >= 400) {
+								const errorBody = parseArrayBufferBody((responseData as { body?: unknown }).body);
+								returnData.push({
+									json: { ...errorBody, statusCode },
+									pairedItem: { item: i },
+								});
+								continue;
+							}
 
 							const binaryData = await this.helpers.prepareBinaryData(
 								Buffer.from(responseData.body as ArrayBuffer),
@@ -920,9 +1010,16 @@ export class Htmlcsstopdf implements INodeType {
 									url: 'https://pdfmunk.com/api/v1/compressPdf',
 									body,
 									json: true,
-								},
+									simple: false,
+									returnFullResponse: true,
+								} as any,
 							);
-							returnData.push({ json: responseData, pairedItem: { item: i } });
+							const statusCode = (responseData as { statusCode?: number }).statusCode ?? 0;
+							const bodyData = toJsonObject((responseData as { body?: unknown }).body);
+							returnData.push({
+								json: statusCode >= 400 ? { ...bodyData, statusCode } : bodyData,
+								pairedItem: { item: i },
+							});
 						}
 					}
 				} else if (resource === 'pdfSecurity') {
@@ -954,10 +1051,21 @@ export class Htmlcsstopdf implements INodeType {
 									url: 'https://pdfmunk.com/api/v1/lockPdf',
 									body,
 									json: true,
+									simple: false,
 									encoding: 'arraybuffer',
 									returnFullResponse: true,
-								},
+								} as any,
 							);
+
+							const statusCode = (responseData as { statusCode?: number }).statusCode ?? 0;
+							if (statusCode >= 400) {
+								const errorBody = parseArrayBufferBody((responseData as { body?: unknown }).body);
+								returnData.push({
+									json: { ...errorBody, statusCode },
+									pairedItem: { item: i },
+								});
+								continue;
+							}
 
 							const binaryData = await this.helpers.prepareBinaryData(
 								Buffer.from(responseData.body as ArrayBuffer),
@@ -979,9 +1087,16 @@ export class Htmlcsstopdf implements INodeType {
 									url: 'https://pdfmunk.com/api/v1/lockPdf',
 									body,
 									json: true,
-								},
+									simple: false,
+									returnFullResponse: true,
+								} as any,
 							);
-							returnData.push({ json: responseData, pairedItem: { item: i } });
+							const statusCode = (responseData as { statusCode?: number }).statusCode ?? 0;
+							const bodyData = toJsonObject((responseData as { body?: unknown }).body);
+							returnData.push({
+								json: statusCode >= 400 ? { ...bodyData, statusCode } : bodyData,
+								pairedItem: { item: i },
+							});
 						}
 					} else if (operation === 'unlockPdf') {
 						const pdfUrl = this.getNodeParameter('unlock_url', i) as string;
@@ -1005,10 +1120,21 @@ export class Htmlcsstopdf implements INodeType {
 									url: 'https://pdfmunk.com/api/v1/unlockPdf',
 									body,
 									json: true,
+									simple: false,
 									encoding: 'arraybuffer',
 									returnFullResponse: true,
-								},
+								} as any,
 							);
+
+							const statusCode = (responseData as { statusCode?: number }).statusCode ?? 0;
+							if (statusCode >= 400) {
+								const errorBody = parseArrayBufferBody((responseData as { body?: unknown }).body);
+								returnData.push({
+									json: { ...errorBody, statusCode },
+									pairedItem: { item: i },
+								});
+								continue;
+							}
 
 							const binaryData = await this.helpers.prepareBinaryData(
 								Buffer.from(responseData.body as ArrayBuffer),
@@ -1030,9 +1156,16 @@ export class Htmlcsstopdf implements INodeType {
 									url: 'https://pdfmunk.com/api/v1/unlockPdf',
 									body,
 									json: true,
-								},
+									simple: false,
+									returnFullResponse: true,
+								} as any,
 							);
-							returnData.push({ json: responseData, pairedItem: { item: i } });
+							const statusCode = (responseData as { statusCode?: number }).statusCode ?? 0;
+							const bodyData = toJsonObject((responseData as { body?: unknown }).body);
+							returnData.push({
+								json: statusCode >= 400 ? { ...bodyData, statusCode } : bodyData,
+								pairedItem: { item: i },
+							});
 						}
 					}
 				} else if (resource === 'pdfParsing') {
@@ -1056,10 +1189,16 @@ export class Htmlcsstopdf implements INodeType {
 								url: 'https://pdfmunk.com/api/v1/pdf/parse',
 								body,
 								json: true,
-							},
+								simple: false,
+								returnFullResponse: true,
+							} as any,
 						);
-
-						returnData.push({ json: responseData, pairedItem: { item: i } });
+						const statusCode = (responseData as { statusCode?: number }).statusCode ?? 0;
+						const bodyData = toJsonObject((responseData as { body?: unknown }).body);
+						returnData.push({
+							json: statusCode >= 400 ? { ...bodyData, statusCode } : bodyData,
+							pairedItem: { item: i },
+						});
 					}
 				}
 			} catch (error) {
