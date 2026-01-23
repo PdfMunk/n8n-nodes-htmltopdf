@@ -4,7 +4,7 @@ import type {
 	INodeType,
 	INodeTypeDescription,
 } from 'n8n-workflow';
-import { NodeConnectionTypes, NodeOperationError } from 'n8n-workflow';
+import { NodeConnectionType, NodeOperationError } from 'n8n-workflow';
 
 export class Htmlcsstopdf implements INodeType {
 	description: INodeTypeDescription = {
@@ -17,8 +17,8 @@ export class Htmlcsstopdf implements INodeType {
 		defaults: {
 			name: 'HTML to PDF',
 		},
-		inputs: [NodeConnectionTypes.Main],
-		outputs: [NodeConnectionTypes.Main],
+		inputs: [NodeConnectionType.Main],
+		outputs: [NodeConnectionType.Main],
 		credentials: [
 			{
 				name: 'htmlcsstopdfApi',
