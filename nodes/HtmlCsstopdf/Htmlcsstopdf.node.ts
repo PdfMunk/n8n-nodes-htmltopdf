@@ -11,7 +11,7 @@ export class Htmlcsstopdf implements INodeType {
 	description: INodeTypeDescription = {
 		displayName: 'HTML to PDF',
 		name: 'htmlcsstopdf',
-		icon: { light: 'file:../../icons/htmlcsstopdf.light.svg', dark: 'file:../../icons/htmlcsstopdf.dark.svg' },
+		icon: { light: 'file:htmlcsstopdf.light.svg', dark: 'file:htmlcsstopdf.dark.svg' },
 		group: ['transform'],
 		version: 1,
 		description: 'Convert HTML to PDF, Parse PDF, Extract Data, and Manage PDF Security',

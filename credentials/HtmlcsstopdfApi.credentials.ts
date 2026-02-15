@@ -9,8 +9,8 @@ import {
 export class HtmlcsstopdfApi implements ICredentialType {
 	name = 'htmlcsstopdfApi';
 	icon: Icon = {
-		light: 'file:../icons/htmlcsstopdf.light.svg',
-		dark: 'file:../icons/htmlcsstopdf.dark.svg'
+		light: 'file:htmlcsstopdf.light.svg',
+		dark: 'file:htmlcsstopdf.dark.svg'
 	};
 	displayName = 'HTML to PDF API';
 	documentationUrl = 'https://www.pdfmunk.com/api-docs';
