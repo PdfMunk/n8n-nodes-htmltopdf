@@ -9,14 +9,14 @@ import { NodeConnectionType, NodeOperationError } from 'n8n-workflow';
 
 export class Htmlcsstopdf implements INodeType {
 	description: INodeTypeDescription = {
-		displayName: 'HTML to PDF',
+		displayName: 'HTML to PDF | PDF Parse Extract | Screenshot of website to PDF/PNG',
 		name: 'htmlcsstopdf',
 		icon: { light: 'file:htmlcsstopdf.svg', dark: 'file:htmlcsstopdf.svg' },
 		group: ['transform'],
 		version: 1,
-		description: 'Convert HTML to PDF or Capture Website Screenshots to PDF',
+		description: 'Convert HTML to PDF, Parse PDF, Extract Data, and Manage PDF Security',
 		defaults: {
-			name: 'HTML to PDF',
+			name: 'HTML to PDF | PDF Parse Extract | Screenshot of website to PDF/PNG',
 		},
 		inputs: [NodeConnectionType.Main],
 		outputs: [NodeConnectionType.Main],
