@@ -1,17 +1,30 @@
 # n8n-nodes-htmlcsstopdf
 
-![HTML to PDF Banner](https://user-images.githubusercontent.com/10284570/173569848-c624317f-42b1-45a6-ab09-f0ea3c247648.png)
+[![PDFMunk Banner](images/pdfmunkbanner.png)](https://pdfmunk.com/)
 
-An n8n community node for converting HTML content to PDF documents and capturing website screenshots as PDFs using the PDFMunk API.
+**Get your api key from** [https://pdfapihub.com](https://pdfapihub.com)) 
+
+An n8n community node for creating PDFs from HTML/CSS or URLs, manipulating PDFs (merge/split/compress), securing PDFs (lock/unlock), and parsing PDFs to structured JSON — powered by the PDFMunk API.
 
 ## Features
 
-- **HTML to PDF**: Convert custom HTML/CSS content to PDF documents
-- **Website to PDF**: Capture full-page website screenshots as PDF files
-- **Flexible Output**: Support for URL and File response formats
-- **Customizable Viewport**: Configure viewport dimensions for optimal rendering
-- **Full Page Capture**: Option to capture entire web pages or specific viewport areas
-- **Configurable Timeout**: Adjust timeout settings for large PDF generation
+- **PDF Creation**
+  - **HTML to PDF**: Render HTML + optional CSS into a PDF
+  - **URL to PDF**: Capture a website as a PDF (full-page support)
+  - **Dynamic Params**: Template placeholder replacement for HTML generation
+  - **Viewport Control**: Configure viewport width/height
+  - **Flexible Output**: Return a direct URL or a binary PDF file
+  - **Output Filename**: Set the resulting PDF filename
+  - **Configurable Timeout**: Increase timeouts for large/slow renders
+- **PDF Manipulation**
+  - **Merge PDFs**: Merge 2–15 PDFs from URLs
+  - **Split PDF**: Extract specific pages, split each page, or split into chunks
+  - **Compress PDF**: Reduce file size with selectable compression levels
+- **PDF Security**
+  - **Lock PDF**: Add password protection (optionally provide input password for already-encrypted PDFs)
+  - **Unlock PDF**: Remove password protection
+- **PDF Extraction & Parsing**
+  - **Parse PDF to JSON**: Extract text/layout/tables/full extraction with page selection
 
 ## Installation
 
@@ -54,11 +67,7 @@ USER node
    - Navigate to the "API Keys" section
    - Click "Generate New API Key"
    - Copy your API key securely
-5. **Choose Plan**: Select a plan based on your usage needs:
-   - **Free Tier**: 100 conversions/month
-   - **Starter**: 1,000 conversions/month
-   - **Professional**: 10,000 conversions/month
-   - **Enterprise**: Custom limits
+5. **Choose Plan**: Select a plan based on your usage needs (see PDFMunk pricing for current limits).
 
 ## Configuration
 
@@ -73,38 +82,93 @@ USER node
 
 ## Operations
 
-### HTML to PDF
-Convert custom HTML and CSS content into PDF documents.
+The node exposes operations grouped by **Resource**.
+
+### PDF Creation
+
+#### HTML to PDF
+Generate a PDF from custom HTML and optional CSS.
 
 **Parameters:**
-- **HTML Content**: The HTML content to convert
-- **CSS Content**: Optional CSS styling for the HTML
-- **Viewport Width**: Viewport width in pixels (default: 1080)
-- **Viewport Height**: Viewport height in pixels (default: 720)
-- **Output Format**: Choose between URL or File output
-- **Timeout**: Request timeout in seconds (default: 300 seconds = 5 minutes). Increase this for large PDFs.
+- **HTML Content** (`html_content`)
+- **CSS Content** (`css_content`, optional)
+- **Dynamic Params** (`dynamic_params`, optional key/value pairs for templating)
+- **Viewport Width/Height** (`viewPortWidth`, `viewPortHeight`)
+- **Output Format** (`output_format`: `url` or `file`)
+- **Output Filename** (`output_filename`, without `.pdf`)
+- **Timeout (in Seconds)** (`timeout`, default: 300)
 
-**Example Use Cases:**
-- Generate invoices from HTML templates
-- Create reports with custom styling
-- Convert rich text content to PDF documents
-
-### URL to PDF
-Capture website screenshots and save them as PDF documents.
+#### URL to PDF
+Generate a PDF from a website URL.
 
 **Parameters:**
-- **URL**: The website URL to capture
-- **Full Page**: Capture the entire page (default: true)
-- **Wait Time**: Milliseconds to wait before capturing (default: 10000)
-- **Viewport Width**: Viewport width in pixels (default: 1080)
-- **Viewport Height**: Viewport height in pixels (default: 720)
-- **Output Format**: Choose between URL or File output
-- **Timeout**: Request timeout in seconds (default: 300 seconds = 5 minutes). Increase this for large PDFs.
+- **URL** (`url`)
+- **Full Page** (`full_page`, default: `true`)
+- **Wait Till** (`wait_till`, milliseconds to wait before capture)
+- **Viewport Width/Height** (`viewPortWidth`, `viewPortHeight`)
+- **Output Format** (`output_format`: `url` or `file`)
+- **Output Filename** (`output_filename`, without `.pdf`)
+- **Timeout (in Seconds)** (`timeout`, default: 300)
 
-**Example Use Cases:**
-- Archive web pages as PDFs
-- Generate website screenshots for documentation
-- Create visual reports of web content
+### PDF Manipulation
+
+#### Merge PDFs
+Merge multiple PDF URLs into one document.
+
+**Parameters:**
+- **PDF URLs** (`pdf_urls`, comma-separated; minimum 2, maximum 15)
+- **Output Type** (`merge_output`: `url`, `file`, or `base64`)
+
+#### Split PDF
+Split or extract pages from a PDF.
+
+**Parameters:**
+- **PDF URL** (`split_url`)
+- **Split Mode** (`split_mode`)
+  - `pages`: extract a page range/list via **Page Range** (`pages`)
+  - `each`: split each page into its own PDF
+  - `chunks`: split into **Number of Chunks** (`chunks`)
+- **Output Type** (`split_output`: `url`, `file`, or `base64`)
+
+#### Compress PDF
+Compress a PDF to reduce file size.
+
+**Parameters:**
+- **PDF URL** (`compress_url`, max 10MB)
+- **Compression Level** (`compression`: `low`, `medium`, `high`, `max`)
+- **Output Type** (`compress_output`: `url`, `file`, or `base64`)
+- **Output Filename** (`compress_output_name`, e.g. `compressed.pdf`)
+
+### PDF Security
+
+#### Lock PDF
+Add password protection to a PDF.
+
+**Parameters:**
+- **PDF URL** (`lock_url`, max 10MB)
+- **Password** (`lock_password`)
+- **Input Password** (`lock_input_password`, optional)
+- **Output Type** (`lock_output`: `url`, `file`, or `base64`)
+- **Output Filename** (`lock_output_name`, e.g. `locked.pdf`)
+
+#### Unlock PDF
+Remove password protection from a PDF.
+
+**Parameters:**
+- **PDF URL** (`unlock_url`, max 10MB)
+- **Password** (`unlock_password`)
+- **Output Type** (`unlock_output`: `url`, `file`, or `base64`)
+- **Output Filename** (`unlock_output_name`, e.g. `unlocked.pdf`)
+
+### PDF Extraction & Parsing
+
+#### Parse PDF
+Parse a PDF into structured JSON.
+
+**Parameters:**
+- **PDF URL** (`parse_url`)
+- **Parse Mode** (`parse_mode`: `text`, `layout`, `tables`, `full`)
+- **Pages** (`parse_pages`: `all` or ranges like `1-3`)
 
 ## Usage
 
@@ -118,6 +182,7 @@ Capture website screenshots and save them as PDF documents.
   "viewPortWidth": 1080,
   "viewPortHeight": 720,
   "output_format": "file",
+  "output_filename": "hello-world",
   "timeout": 300
 }
 ```
@@ -165,6 +230,81 @@ Capture website screenshots and save them as PDF documents.
     <p>This certifies that <strong>John Doe</strong> has completed the course.</p>
     <div class="signature">Authorized Signature</div>
 </div>
+
+### PDF Manipulation Examples
+
+#### Merge PDFs
+```json
+{
+  "resource": "pdfManipulation",
+  "operation": "mergePdfs",
+  "pdf_urls": "https://example.com/a.pdf, https://example.com/b.pdf",
+  "merge_output": "url"
+}
+```
+
+#### Split PDF (extract pages)
+```json
+{
+  "resource": "pdfManipulation",
+  "operation": "splitPdf",
+  "split_url": "https://example.com/document.pdf",
+  "split_mode": "pages",
+  "pages": "1-3",
+  "split_output": "url"
+}
+```
+
+#### Compress PDF
+```json
+{
+  "resource": "pdfManipulation",
+  "operation": "compressPdf",
+  "compress_url": "https://example.com/document.pdf",
+  "compression": "high",
+  "compress_output": "file",
+  "compress_output_name": "compressed.pdf"
+}
+```
+
+### PDF Security Examples
+
+#### Lock PDF
+```json
+{
+  "resource": "pdfSecurity",
+  "operation": "lockPdf",
+  "lock_url": "https://example.com/document.pdf",
+  "lock_password": "your-password",
+  "lock_output": "file",
+  "lock_output_name": "locked.pdf"
+}
+```
+
+#### Unlock PDF
+```json
+{
+  "resource": "pdfSecurity",
+  "operation": "unlockPdf",
+  "unlock_url": "https://example.com/locked.pdf",
+  "unlock_password": "your-password",
+  "unlock_output": "file",
+  "unlock_output_name": "unlocked.pdf"
+}
+```
+
+### PDF Parsing Example
+
+#### Parse PDF to JSON
+```json
+{
+  "resource": "pdfParsing",
+  "operation": "parsePdf",
+  "parse_url": "https://example.com/document.pdf",
+  "parse_mode": "full",
+  "parse_pages": "all"
+}
+```
 ```
 
 ## Use Cases
@@ -245,8 +385,9 @@ Capture website screenshots and save them as PDF documents.
 ## Output
 
 The node returns:
-- **URL format**: Direct link to the generated PDF
-- **File format**: Binary PDF file data that can be saved or sent via email
+- **URL output**: A direct link (or URL(s), depending on operation)
+- **File output**: Binary PDF file data in n8n (usable by "Write Binary File", email attachments, etc.)
+- **Base64 output** (where available): Base64-encoded result in the JSON response
 
 ## Error Handling
 
@@ -262,7 +403,7 @@ The node provides detailed error messages for common issues:
 ## FAQ
 
 **Q: Is there a free tier?**  
-A: Yes, PDFMunk offers 100 free conversions per month.
+A: PDFMunk may offer trial/free usage depending on current plans. Check the PDFMunk dashboard/pricing for the latest limits.
 
 **Q: What HTML features are supported?**  
 A: Most modern HTML5 and CSS3 features are supported, including flexbox, grid, and media queries.
@@ -271,7 +412,7 @@ A: Most modern HTML5 and CSS3 features are supported, including flexbox, grid, a
 A: Yes, images accessible via URL will be included in the PDF.
 
 **Q: What's the maximum file size?**  
-A: PDFs can be up to 10MB on most plans. Check PDFMunk documentation for current limits.
+A: Some operations in this node expect PDFs up to 10MB (as indicated in the node parameters). Check PDFMunk documentation for current limits and plan-specific constraints.
 
 **Q: How do I generate large PDFs (100+ pages)?**  
 A: Increase the timeout setting in the node configuration. For large PDFs, set timeout to 600-900 seconds (10-15 minutes).
