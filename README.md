@@ -1,22 +1,17 @@
 # n8n-nodes-htmlcsstopdf
 
-[
-  ![HTML to PDF Banner](images/pdfmunkbanner.png)
-](https://pdfmunk.com)
+![HTML to PDF Banner](https://user-images.githubusercontent.com/10284570/173569848-c624317f-42b1-45a6-ab09-f0ea3c247648.png)
 
-An n8n community node for **PDFMunk** (Get your API key from [https://pdfmunk.com](https://pdfmunk.com)) that can convert HTML to PDF, capture website screenshots, and parse/merge/split/compress/lock/unlock PDFs.
+An n8n community node for converting HTML content to PDF documents and capturing website screenshots as PDFs using the PDFMunk API.
 
 ## Features
 
 - **HTML to PDF**: Convert custom HTML/CSS content to PDF documents
-- **URL to PDF (Website Screenshot)**: Capture full-page website screenshots as PDF files
-- **PDF Parse / Extract**: Parse PDFs into structured JSON (text, layout, tables, full)
-- **PDF Merge**: Merge up to 15 PDFs into a single PDF
-- **PDF Split**: Extract pages, split each page, or split into N chunks
-- **PDF Compress**: Reduce PDF file size with adjustable compression levels
-- **PDF Lock / Unlock**: Add or remove password protection
-- **Flexible Output**: URL / File / Base64 outputs (varies by operation)
-- **Customizable Viewport + Timeout**: Control rendering viewport and timeouts for PDF creation
+- **Website to PDF**: Capture full-page website screenshots as PDF files
+- **Flexible Output**: Support for URL and File response formats
+- **Customizable Viewport**: Configure viewport dimensions for optimal rendering
+- **Full Page Capture**: Option to capture entire web pages or specific viewport areas
+- **Configurable Timeout**: Adjust timeout settings for large PDF generation
 
 ## Installation
 
@@ -78,9 +73,6 @@ USER node
 
 ## Operations
 
-API reference docs:
-https://www.pdfmunk.com/api-docs
-
 ### HTML to PDF
 Convert custom HTML and CSS content into PDF documents.
 
@@ -113,81 +105,6 @@ Capture website screenshots and save them as PDF documents.
 - Archive web pages as PDFs
 - Generate website screenshots for documentation
 - Create visual reports of web content
-
-### PDF Merge
-Merge multiple PDF URLs into a single PDF.
-
-**Parameters:**
-- **PDF URLs**: Comma-separated list of PDF URLs (minimum 2, maximum 15)
-- **Output Type**: `url` / `file` / `base64`
-
-**Returns:**
-- `url` / `base64`: JSON
-- `file`: binary PDF
-
-### PDF Split
-Split a PDF or extract specific pages.
-
-**Parameters:**
-- **PDF URL**: URL of the PDF to split
-- **Split Mode**: Extract Pages / Split Each Page / Split Into Chunks
-- **Page Range**: e.g. `1-5`, `1,3,5`, `10-` (only for Extract Pages)
-- **Number of Chunks**: (only for Split Into Chunks)
-- **Output Type**: `url` / `file` / `base64`
-
-**Returns:**
-- `url` / `base64`: JSON
-- `file`: binary file (PDF/ZIP depending on API response)
-
-### PDF Compress
-Compress a PDF to reduce file size.
-
-**Parameters:**
-- **PDF URL**: URL of the PDF to compress
-- **Compression Level**: Low / Medium / High / Max
-- **Output Type**: `url` / `file` / `base64`
-- **Output Filename**: output name when returning a file
-
-**Returns:**
-- `url` / `base64`: JSON
-- `file`: binary PDF
-
-### PDF Lock
-Add password protection to a PDF.
-
-**Parameters:**
-- **PDF URL**: URL of the PDF to lock
-- **Password**: password to set
-- **Input Password**: optional (if the input PDF is already encrypted)
-- **Output Type**: `url` / `file` / `base64`
-- **Output Filename**
-
-**Returns:**
-- `url` / `base64`: JSON
-- `file`: binary PDF
-
-### PDF Unlock
-Remove password protection from a PDF.
-
-**Parameters:**
-- **PDF URL**: URL of the password-protected PDF to unlock
-- **Password**: password to unlock
-- **Output Type**: `url` / `file` / `base64`
-- **Output Filename**
-
-**Returns:**
-- `url` / `base64`: JSON
-- `file`: binary PDF
-
-### PDF Parse / Extract
-Parse a PDF into structured JSON.
-
-**Parameters:**
-- **PDF URL**: URL of the PDF to parse
-- **Parse Mode**: `text` / `layout` / `tables` / `full`
-- **Pages**: `all` or a range like `1-3`
-
-**Returns:** JSON (extracted text/structure)
 
 ## Usage
 
@@ -370,8 +287,11 @@ A: Increase the timeout parameter in the node settings. The default is 300 secon
 
 ## Resources
 
-- [n8n community nodes documentation](https://docs.n8n.io/integrations/community-nodes/)
+### PDF Creation
+
+- [PDFMunk](https://pdfmunk.com/)
 - [PDFMunk API Documentation](https://pdfmunk.com/api-docs)
+- [n8n community nodes documentation](https://docs.n8n.io/integrations/community-nodes/)
 - [n8n workflow examples](https://n8n.io/workflows)
 
 ## Support

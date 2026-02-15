@@ -11,7 +11,7 @@ export class Htmlcsstopdf implements INodeType {
 	description: INodeTypeDescription = {
 		displayName: 'HTML to PDF | PDF Parse Extract | Screenshot of website to PDF/PNG',
 		name: 'htmlcsstopdf',
-		icon: { light: 'file:htmlcsstopdf.svg', dark: 'file:htmlcsstopdf.svg' },
+		icon: { light: 'file:../../icons/htmlcsstopdf.light.svg', dark: 'file:../../icons/htmlcsstopdf.dark.svg' },
 		group: ['transform'],
 		version: 1,
 		description: 'Convert HTML to PDF, Parse PDF, Extract Data, and Manage PDF Security',
@@ -705,7 +705,7 @@ export class Htmlcsstopdf implements INodeType {
 					const outputFilename = this.getNodeParameter('output_filename', i) as string;
 					const timeoutSeconds = this.getNodeParameter('timeout', i) as number;
 					const timeout = timeoutSeconds * 1000;
-					let body: Record<string, unknown> = { output_filename: outputFilename };
+					const body: Record<string, unknown> = { output_filename: outputFilename };
 
 					if (operation === 'htmlToPdf') {
 						body.html_content = this.getNodeParameter('html_content', i) as string;
@@ -745,11 +745,10 @@ export class Htmlcsstopdf implements INodeType {
 								url: 'https://pdfmunk.com/api/v1/generatePdf',
 								body,
 								json: true,
-								simple: false,
 								encoding: 'arraybuffer',
 								returnFullResponse: true,
 								timeout,
-							} as any,
+							},
 						);
 
 						const statusCode = (responseData as { statusCode?: number }).statusCode ?? 0;
@@ -782,10 +781,9 @@ export class Htmlcsstopdf implements INodeType {
 								url: 'https://pdfmunk.com/api/v1/generatePdf',
 								body,
 								json: true,
-								simple: false,
 								returnFullResponse: true,
 								timeout,
-							} as any,
+							},
 						);
 						const statusCode = (responseData as { statusCode?: number }).statusCode ?? 0;
 						const bodyData = toJsonObject((responseData as { body?: unknown }).body);
@@ -831,10 +829,9 @@ export class Htmlcsstopdf implements INodeType {
 									url: 'https://pdfmunk.com/api/v1/pdf/merge',
 									body,
 									json: true,
-									simple: false,
 									encoding: 'arraybuffer',
 									returnFullResponse: true,
-								} as any,
+								},
 							);
 
 							const statusCode = (responseData as { statusCode?: number }).statusCode ?? 0;
@@ -867,9 +864,8 @@ export class Htmlcsstopdf implements INodeType {
 									url: 'https://pdfmunk.com/api/v1/pdf/merge',
 									body,
 									json: true,
-									simple: false,
 									returnFullResponse: true,
-								} as any,
+								},
 							);
 							const statusCode = (responseData as { statusCode?: number }).statusCode ?? 0;
 							const bodyData = toJsonObject((responseData as { body?: unknown }).body);
@@ -905,10 +901,9 @@ export class Htmlcsstopdf implements INodeType {
 									url: 'https://pdfmunk.com/api/v1/pdf/split',
 									body,
 									json: true,
-									simple: false,
 									encoding: 'arraybuffer',
 									returnFullResponse: true,
-								} as any,
+								},
 							);
 
 							const statusCode = (responseData as { statusCode?: number }).statusCode ?? 0;
@@ -941,9 +936,8 @@ export class Htmlcsstopdf implements INodeType {
 									url: 'https://pdfmunk.com/api/v1/pdf/split',
 									body,
 									json: true,
-									simple: false,
 									returnFullResponse: true,
-								} as any,
+								},
 							);
 							const statusCode = (responseData as { statusCode?: number }).statusCode ?? 0;
 							const bodyData = toJsonObject((responseData as { body?: unknown }).body);
@@ -974,10 +968,9 @@ export class Htmlcsstopdf implements INodeType {
 									url: 'https://pdfmunk.com/api/v1/compressPdf',
 									body,
 									json: true,
-									simple: false,
 									encoding: 'arraybuffer',
 									returnFullResponse: true,
-								} as any,
+								},
 							);
 
 							const statusCode = (responseData as { statusCode?: number }).statusCode ?? 0;
@@ -1010,9 +1003,8 @@ export class Htmlcsstopdf implements INodeType {
 									url: 'https://pdfmunk.com/api/v1/compressPdf',
 									body,
 									json: true,
-									simple: false,
 									returnFullResponse: true,
-								} as any,
+								},
 							);
 							const statusCode = (responseData as { statusCode?: number }).statusCode ?? 0;
 							const bodyData = toJsonObject((responseData as { body?: unknown }).body);
@@ -1051,10 +1043,9 @@ export class Htmlcsstopdf implements INodeType {
 									url: 'https://pdfmunk.com/api/v1/lockPdf',
 									body,
 									json: true,
-									simple: false,
 									encoding: 'arraybuffer',
 									returnFullResponse: true,
-								} as any,
+								},
 							);
 
 							const statusCode = (responseData as { statusCode?: number }).statusCode ?? 0;
@@ -1087,9 +1078,8 @@ export class Htmlcsstopdf implements INodeType {
 									url: 'https://pdfmunk.com/api/v1/lockPdf',
 									body,
 									json: true,
-									simple: false,
 									returnFullResponse: true,
-								} as any,
+								},
 							);
 							const statusCode = (responseData as { statusCode?: number }).statusCode ?? 0;
 							const bodyData = toJsonObject((responseData as { body?: unknown }).body);
@@ -1120,10 +1110,9 @@ export class Htmlcsstopdf implements INodeType {
 									url: 'https://pdfmunk.com/api/v1/unlockPdf',
 									body,
 									json: true,
-									simple: false,
 									encoding: 'arraybuffer',
 									returnFullResponse: true,
-								} as any,
+								},
 							);
 
 							const statusCode = (responseData as { statusCode?: number }).statusCode ?? 0;
@@ -1156,9 +1145,8 @@ export class Htmlcsstopdf implements INodeType {
 									url: 'https://pdfmunk.com/api/v1/unlockPdf',
 									body,
 									json: true,
-									simple: false,
 									returnFullResponse: true,
-								} as any,
+								},
 							);
 							const statusCode = (responseData as { statusCode?: number }).statusCode ?? 0;
 							const bodyData = toJsonObject((responseData as { body?: unknown }).body);
@@ -1189,9 +1177,8 @@ export class Htmlcsstopdf implements INodeType {
 								url: 'https://pdfmunk.com/api/v1/pdf/parse',
 								body,
 								json: true,
-								simple: false,
 								returnFullResponse: true,
-							} as any,
+							},
 						);
 						const statusCode = (responseData as { statusCode?: number }).statusCode ?? 0;
 						const bodyData = toJsonObject((responseData as { body?: unknown }).body);

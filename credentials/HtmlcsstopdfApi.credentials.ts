@@ -1,5 +1,6 @@
 import {
 	IAuthenticateGeneric,
+	Icon,
 	ICredentialTestRequest,
 	ICredentialType,
 	INodeProperties,
@@ -7,6 +8,10 @@ import {
 
 export class HtmlcsstopdfApi implements ICredentialType {
 	name = 'htmlcsstopdfApi';
+	icon: Icon = {
+		light: 'file:../icons/htmlcsstopdf.light.svg',
+		dark: 'file:../icons/htmlcsstopdf.dark.svg'
+	};
 	displayName = 'HTML to PDF API';
 	documentationUrl = 'https://www.pdfmunk.com/api-docs';
 	properties: INodeProperties[] = [
