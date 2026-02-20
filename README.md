@@ -2,7 +2,9 @@
 
 [![PDFMunk Banner](images/pdfmunkbanner.png)](https://pdfmunk.com/)
 
-**Get your api key from** [https://pdfapihub.com](https://pdfapihub.com)) 
+**Get your api key from** [https://pdfmunk.com](https://pdfmunk.com)) 
+
+**For PDF Split/Merge and other powerful PDF features**, try our new product [PDFAPIHub](https://pdfapihub.com)
 
 An n8n community node for creating PDFs from HTML/CSS or URLs, manipulating PDFs (merge/split/compress), securing PDFs (lock/unlock), and parsing PDFs to structured JSON — powered by the PDFMunk API.
 
