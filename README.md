@@ -2,7 +2,7 @@
 
 [![PDFMunk Banner](images/pdfmunkbanner.png)](https://pdfmunk.com/)
 
-**Get your api key from** [https://pdfmunk.com](https://pdfmunk.com)) 
+**Get your api key from** [https://pdfmunk.com](https://pdfmunk.com)
 
 **For PDF Split/Merge and other powerful PDF features**, try our new product [PDFAPIHub](https://pdfapihub.com)
 
