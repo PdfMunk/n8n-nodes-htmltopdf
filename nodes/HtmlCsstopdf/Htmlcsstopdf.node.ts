@@ -159,8 +159,14 @@ export class Htmlcsstopdf implements INodeType {
 					{
 						name: 'Parse PDF',
 						value: 'parsePdf',
-						description: 'Extract structured data from PDF',
+						description: 'Extract structured data from text-based PDF',
 						action: 'Parse PDF to JSON',
+					},
+					{
+						name: 'Parse PDF with OCR',
+						value: 'parsePdfOcr',
+						description: 'Extract OCR text from scanned PDF pages',
+						action: 'OCR parse PDF',
 					},
 				],
 				default: 'parsePdf',
@@ -626,10 +632,10 @@ export class Htmlcsstopdf implements INodeType {
 				name: 'parse_url',
 				type: 'string',
 				default: '',
-				description: 'URL of the PDF to parse',
+				description: 'Public URL of the PDF to parse',
 				displayOptions: {
 					show: {
-						operation: ['parsePdf'],
+						operation: ['parsePdf', 'parsePdfOcr'],
 					},
 				},
 			},
@@ -652,14 +658,62 @@ export class Htmlcsstopdf implements INodeType {
 				},
 			},
 			{
+				displayName: 'Language',
+				name: 'lang',
+				type: 'string',
+				default: 'eng',
+				description: 'Tesseract language code(s), for example eng or eng+hin',
+				displayOptions: {
+					show: {
+						operation: ['parsePdfOcr'],
+					},
+				},
+			},
+			{
 				displayName: 'Pages',
 				name: 'parse_pages',
 				type: 'string',
 				default: 'all',
-				description: 'Page selection: "all" or a range like "1-3" or single page like "2"',
+				description: 'Page selection: all, a range like 1-3, or a list like 1,3,5-7',
 				displayOptions: {
 					show: {
-						operation: ['parsePdf'],
+						operation: ['parsePdf', 'parsePdfOcr'],
+					},
+				},
+			},
+			{
+				displayName: 'DPI',
+				name: 'dpi',
+				type: 'number',
+				default: 200,
+				description: 'Rasterization DPI before OCR (72-400)',
+				displayOptions: {
+					show: {
+						operation: ['parsePdfOcr'],
+					},
+				},
+			},
+			{
+				displayName: 'PSM',
+				name: 'psm',
+				type: 'number',
+				default: 3,
+				description: 'Tesseract page segmentation mode (0-13)',
+				displayOptions: {
+					show: {
+						operation: ['parsePdfOcr'],
+					},
+				},
+			},
+			{
+				displayName: 'OEM',
+				name: 'oem',
+				type: 'number',
+				default: 3,
+				description: 'Tesseract OCR engine mode (0-3)',
+				displayOptions: {
+					show: {
+						operation: ['parsePdfOcr'],
 					},
 				},
 			},
@@ -1175,6 +1229,40 @@ export class Htmlcsstopdf implements INodeType {
 							{
 								method: 'POST',
 								url: 'https://pdfmunk.com/api/v1/pdf/parse',
+								body,
+								json: true,
+								returnFullResponse: true,
+							},
+						);
+						const statusCode = (responseData as { statusCode?: number }).statusCode ?? 0;
+						const bodyData = toJsonObject((responseData as { body?: unknown }).body);
+						returnData.push({
+							json: statusCode >= 400 ? { ...bodyData, statusCode } : bodyData,
+							pairedItem: { item: i },
+						});
+					} else if (operation === 'parsePdfOcr') {
+						const pdfUrl = this.getNodeParameter('parse_url', i) as string;
+						const pages = this.getNodeParameter('parse_pages', i) as string;
+						const lang = this.getNodeParameter('lang', i) as string;
+						const dpi = this.getNodeParameter('dpi', i) as number;
+						const psm = this.getNodeParameter('psm', i) as number;
+						const oem = this.getNodeParameter('oem', i) as number;
+
+						const body = {
+							url: pdfUrl,
+							pages,
+							lang,
+							dpi,
+							psm,
+							oem,
+						};
+
+						const responseData = await this.helpers.httpRequestWithAuthentication.call(
+							this,
+							'htmlcsstopdfApi',
+							{
+								method: 'POST',
+								url: 'https://pdfmunk.com/api/v1/pdf/ocr/parse',
 								body,
 								json: true,
 								returnFullResponse: true,
