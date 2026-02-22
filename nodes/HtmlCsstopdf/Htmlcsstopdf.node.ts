@@ -194,7 +194,8 @@ export class Htmlcsstopdf implements INodeType {
 				displayName: 'HTML Content',
 				name: 'html_content',
 				type: 'string',
-				default: '',
+				default: '<html>Hello HTML</html>',
+				placeholder: '<html>Hello HTML</html>',
 				description: 'HTML content to render in the document',
 				displayOptions: {
 					show: {
@@ -259,7 +260,8 @@ export class Htmlcsstopdf implements INodeType {
 				displayName: 'URL',
 				name: 'url',
 				type: 'string',
-				default: '',
+				default: 'https://example.com',
+				placeholder: 'https://example.com',
 				description: 'The URL of the website to capture',
 				displayOptions: {
 					show: {
@@ -373,7 +375,8 @@ export class Htmlcsstopdf implements INodeType {
 				displayName: 'PDF URLs',
 				name: 'pdf_urls',
 				type: 'string',
-				default: '',
+				default: 'https://pdfmunk.com/sample.pdf, https://pdfmunk.com/sample1.pdf',
+				placeholder: 'https://pdfmunk.com/sample.pdf, https://pdfmunk.com/sample1.pdf',
 				description: 'Comma-separated list of PDF URLs to merge (minimum 2, maximum 15)',
 				displayOptions: {
 					show: {
@@ -383,10 +386,11 @@ export class Htmlcsstopdf implements INodeType {
 				},
 			},
 			{
-				displayName: 'File Binary Properties',
+				displayName: 'File Binary Property Name (CSV)',
 				name: 'merge_file_binary_properties',
 				type: 'string',
-				default: 'data',
+				default: 'data,data',
+				placeholder: 'data,data',
 				description: 'Comma-separated binary property names to merge (minimum 2), for example data1,data2',
 				displayOptions: {
 					show: {
@@ -433,7 +437,8 @@ export class Htmlcsstopdf implements INodeType {
 				displayName: 'PDF URL',
 				name: 'split_url',
 				type: 'string',
-				default: '',
+				default: 'https://pdfmunk.com/sample1.pdf',
+				placeholder: 'https://pdfmunk.com/sample1.pdf',
 				description: 'URL of the PDF to split',
 				displayOptions: {
 					show: {
@@ -476,7 +481,8 @@ export class Htmlcsstopdf implements INodeType {
 				displayName: 'Page Range',
 				name: 'pages',
 				type: 'string',
-				default: '1-5',
+				default: '1-3',
+				placeholder: '1-3',
 				description: 'Page range (e.g., "1-5", "1,3,5", "10-")',
 				displayOptions: {
 					show: {
@@ -626,7 +632,8 @@ export class Htmlcsstopdf implements INodeType {
 				displayName: 'PDF URL',
 				name: 'watermark_file_url',
 				type: 'string',
-				default: '',
+				default: 'https://pdfmunk.com/sample.pdf',
+				placeholder: 'https://pdfmunk.com/sample.pdf',
 				description: 'Public URL of the PDF to watermark',
 				displayOptions: {
 					show: {
@@ -735,7 +742,8 @@ export class Htmlcsstopdf implements INodeType {
 				displayName: 'PDF URL',
 				name: 'convert_pdf_image_url',
 				type: 'string',
-				default: '',
+				default: 'https://pdfmunk.com/sample.pdf',
+				placeholder: 'https://pdfmunk.com/sample.pdf',
 				description: 'Public URL of the PDF to convert',
 				displayOptions: {
 					show: {
@@ -773,7 +781,8 @@ export class Htmlcsstopdf implements INodeType {
 				displayName: 'Pages',
 				name: 'convert_pdf_image_pages',
 				type: 'string',
-				default: '',
+				default: '1',
+				placeholder: '1',
 				description: 'Optional pages selection, for example 1-3 or 1,3,5',
 				displayOptions: {
 					show: {
@@ -1418,7 +1427,7 @@ export class Htmlcsstopdf implements INodeType {
 					}
 
 					if (outputFormat === 'file') {
-						const responseData = await this.helpers.httpRequestWithAuthentication.call(
+						let responseData = (await this.helpers.httpRequestWithAuthentication.call(
 							this,
 							'htmlcsstopdfApi',
 							{
@@ -1430,9 +1439,33 @@ export class Htmlcsstopdf implements INodeType {
 								returnFullResponse: true,
 								timeout,
 							},
-						);
+						)) as { statusCode?: number; body: ArrayBuffer; headers?: Record<string, unknown> };
 
-						const statusCode = (responseData as { statusCode?: number }).statusCode ?? 0;
+						let statusCode = responseData.statusCode ?? 0;
+
+						if (statusCode >= 400 && operation === 'urlToPdf') {
+							const fallbackBody: Record<string, unknown> = {
+								...body,
+								output: 'file',
+							};
+							delete fallbackBody.output_format;
+
+							responseData = (await this.helpers.httpRequestWithAuthentication.call(
+								this,
+								'htmlcsstopdfApi',
+								{
+									method: 'POST',
+									url: 'https://pdfmunk.com/api/v1/generatePdf',
+									body: fallbackBody,
+									json: true,
+									encoding: 'arraybuffer',
+									returnFullResponse: true,
+									timeout,
+								},
+							)) as { statusCode?: number; body: ArrayBuffer; headers?: Record<string, unknown> };
+							statusCode = responseData.statusCode ?? 0;
+						}
+
 						if (statusCode >= 400) {
 							const errorBody = parseArrayBufferBody((responseData as { body?: unknown }).body);
 							returnData.push({
@@ -1444,7 +1477,7 @@ export class Htmlcsstopdf implements INodeType {
 
 						await prepareBinaryResponse(
 							i,
-							responseData as { body: ArrayBuffer; headers?: Record<string, unknown> },
+							responseData,
 							`${outputFilename}.pdf`,
 							'application/pdf',
 						);
@@ -1723,14 +1756,18 @@ export class Htmlcsstopdf implements INodeType {
 						const fontSize = this.getNodeParameter('watermark_font_size', i) as number;
 
 						const body: Record<string, unknown> = {
+							output: outputFormat,
 							output_format: outputFormat,
 							text,
+							watermark_text: text,
 							opacity,
 							angle,
 						};
 
 						if (watermarkInputType === 'url') {
-							body.file_url = this.getNodeParameter('watermark_file_url', i) as string;
+							const watermarkUrl = this.getNodeParameter('watermark_file_url', i) as string;
+							body.file_url = watermarkUrl;
+							body.url = watermarkUrl;
 						}
 
 						if (fontSize > 0) {

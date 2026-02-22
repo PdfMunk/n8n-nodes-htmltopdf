@@ -19,14 +19,18 @@ An n8n community node for creating PDFs from HTML/CSS or URLs, manipulating PDFs
   - **Output Filename**: Set the resulting PDF filename
   - **Configurable Timeout**: Increase timeouts for large/slow renders
 - **PDF Manipulation**
-  - **Merge PDFs**: Merge 2–15 PDFs from URLs
+  - **Merge PDFs**: Merge 2–15 PDFs from URLs or multiple binary PDF inputs
   - **Split PDF**: Extract specific pages, split each page, or split into chunks
   - **Compress PDF**: Reduce file size with selectable compression levels
+  - **Watermark PDF**: Add text watermark with angle/opacity/font controls
+  - **Convert PDF to Image**: Convert selected pages to PNG/JPG/JPEG/WEBP
+  - **Convert Image to PDF**: Merge one or multiple images into a PDF
 - **PDF Security**
-  - **Lock PDF**: Add password protection (optionally provide input password for already-encrypted PDFs)
-  - **Unlock PDF**: Remove password protection
+  - **Lock PDF**: Add password protection (optionally provide input password for already-encrypted PDFs), via URL or file input
+  - **Unlock PDF**: Remove password protection, via URL or file input
 - **PDF Extraction & Parsing**
-  - **Parse PDF to JSON**: Extract text/layout/tables/full extraction with page selection
+  - **Parse PDF to JSON**: Extract text/layout/tables/full extraction with page selection, via URL or file input
+  - **Parse PDF with OCR**: OCR parse scanned PDFs with language/PSM/OEM settings
 
 ## Installation
 
@@ -115,17 +119,21 @@ Generate a PDF from a website URL.
 ### PDF Manipulation
 
 #### Merge PDFs
-Merge multiple PDF URLs into one document.
+Merge multiple PDFs into one document.
 
 **Parameters:**
-- **PDF URLs** (`pdf_urls`, comma-separated; minimum 2, maximum 15)
+- **Input Type** (`merge_input_type`: `url` or `file`)
+- **PDF URLs** (`pdf_urls`, comma-separated; minimum 2, maximum 15; URL mode)
+- **File Binary Property Name (CSV)** (`merge_file_binary_properties`, file mode)
 - **Output Type** (`merge_output`: `url`, `file`, or `base64`)
 
 #### Split PDF
 Split or extract pages from a PDF.
 
 **Parameters:**
-- **PDF URL** (`split_url`)
+- **Input Type** (`split_input_type`: `url` or `file`)
+- **PDF URL** (`split_url`, URL mode)
+- **File Binary Property** (`split_file_binary_property`, file mode)
 - **Split Mode** (`split_mode`)
   - `pages`: extract a page range/list via **Page Range** (`pages`)
   - `each`: split each page into its own PDF
@@ -136,10 +144,47 @@ Split or extract pages from a PDF.
 Compress a PDF to reduce file size.
 
 **Parameters:**
-- **PDF URL** (`compress_url`, max 10MB)
+- **Input Type** (`compress_input_type`: `url` or `file`)
+- **PDF URL** (`compress_url`, max 10MB, URL mode)
+- **File Binary Property** (`compress_file_binary_property`, file mode)
 - **Compression Level** (`compression`: `low`, `medium`, `high`, `max`)
 - **Output Type** (`compress_output`: `url`, `file`, or `base64`)
 - **Output Filename** (`compress_output_name`, e.g. `compressed.pdf`)
+
+#### Watermark PDF
+Add text watermark to a PDF.
+
+**Parameters:**
+- **Input Type** (`watermark_input_type`: `url` or `file`)
+- **PDF URL** (`watermark_file_url`, URL mode)
+- **File Binary Property** (`watermark_file_binary_property`, file mode)
+- **Output Format** (`watermark_output_format`: `file`, `url`, `base64`, or `both`)
+- **Watermark Text** (`watermark_text`)
+- **Opacity** (`watermark_opacity`)
+- **Angle** (`watermark_angle`)
+- **Font Size** (`watermark_font_size`, optional)
+
+#### Convert PDF to Image
+Convert one or more PDF pages to images.
+
+**Parameters:**
+- **Input Type** (`convert_pdf_image_input_type`: `url` or `file`)
+- **PDF URL** (`convert_pdf_image_url`, URL mode)
+- **File Binary Property** (`convert_pdf_image_file_binary_property`, file mode)
+- **Page** (`convert_pdf_image_page`, used when `Pages` is empty)
+- **Pages** (`convert_pdf_image_pages`, e.g. `1-3` or `1,3,5`)
+- **Image Format** (`convert_pdf_image_format`: `png`, `jpg`, `jpeg`, `webp`)
+- **DPI** (`convert_pdf_image_dpi`)
+- **Quality** (`convert_pdf_image_quality`)
+- **Output Type** (`convert_pdf_image_output`: `url`, `base64`, `both`, or `file`)
+
+#### Convert Image to PDF
+Convert one or multiple image URLs into a PDF.
+
+**Parameters:**
+- **Image URLs** (`convert_image_pdf_urls`, comma-separated)
+- **Output Type** (`convert_image_pdf_output`: `url`, `base64`, `both`, or `file`)
+- **Output Filename** (`convert_image_pdf_filename`)
 
 ### PDF Security
 
@@ -147,7 +192,9 @@ Compress a PDF to reduce file size.
 Add password protection to a PDF.
 
 **Parameters:**
-- **PDF URL** (`lock_url`, max 10MB)
+- **Input Type** (`lock_input_type`: `url` or `file`)
+- **PDF URL** (`lock_url`, max 10MB, URL mode)
+- **File Binary Property** (`lock_file_binary_property`, file mode)
 - **Password** (`lock_password`)
 - **Input Password** (`lock_input_password`, optional)
 - **Output Type** (`lock_output`: `url`, `file`, or `base64`)
@@ -157,7 +204,9 @@ Add password protection to a PDF.
 Remove password protection from a PDF.
 
 **Parameters:**
-- **PDF URL** (`unlock_url`, max 10MB)
+- **Input Type** (`unlock_input_type`: `url` or `file`)
+- **PDF URL** (`unlock_url`, max 10MB, URL mode)
+- **File Binary Property** (`unlock_file_binary_property`, file mode)
 - **Password** (`unlock_password`)
 - **Output Type** (`unlock_output`: `url`, `file`, or `base64`)
 - **Output Filename** (`unlock_output_name`, e.g. `unlocked.pdf`)
@@ -168,9 +217,24 @@ Remove password protection from a PDF.
 Parse a PDF into structured JSON.
 
 **Parameters:**
-- **PDF URL** (`parse_url`)
+- **Input Type** (`parse_input_type`: `url` or `file`)
+- **PDF URL** (`parse_url`, URL mode)
+- **File Binary Property** (`parse_file_binary_property`, file mode)
 - **Parse Mode** (`parse_mode`: `text`, `layout`, `tables`, `full`)
 - **Pages** (`parse_pages`: `all` or ranges like `1-3`)
+
+#### Parse PDF with OCR
+Parse scanned PDFs using OCR.
+
+**Parameters:**
+- **Input Type** (`parse_input_type`: `url` or `file`)
+- **PDF URL** (`parse_url`, URL mode)
+- **File Binary Property** (`parse_file_binary_property`, file mode)
+- **Language** (`lang`, e.g. `eng` or `eng+hin`)
+- **Pages** (`parse_pages`: `all` or ranges like `1-3`)
+- **DPI** (`dpi`)
+- **PSM** (`psm`)
+- **OEM** (`oem`)
 
 ## Usage
 
@@ -232,6 +296,7 @@ Parse a PDF into structured JSON.
     <p>This certifies that <strong>John Doe</strong> has completed the course.</p>
     <div class="signature">Authorized Signature</div>
 </div>
+```
 
 ### PDF Manipulation Examples
 
@@ -240,8 +305,20 @@ Parse a PDF into structured JSON.
 {
   "resource": "pdfManipulation",
   "operation": "mergePdfs",
+  "merge_input_type": "url",
   "pdf_urls": "https://example.com/a.pdf, https://example.com/b.pdf",
   "merge_output": "url"
+}
+```
+
+#### Merge PDFs (File input)
+```json
+{
+  "resource": "pdfManipulation",
+  "operation": "mergePdfs",
+  "merge_input_type": "file",
+  "merge_file_binary_properties": "data1,data2",
+  "merge_output": "file"
 }
 ```
 
@@ -250,6 +327,7 @@ Parse a PDF into structured JSON.
 {
   "resource": "pdfManipulation",
   "operation": "splitPdf",
+  "split_input_type": "url",
   "split_url": "https://example.com/document.pdf",
   "split_mode": "pages",
   "pages": "1-3",
@@ -262,10 +340,49 @@ Parse a PDF into structured JSON.
 {
   "resource": "pdfManipulation",
   "operation": "compressPdf",
+  "compress_input_type": "url",
   "compress_url": "https://example.com/document.pdf",
   "compression": "high",
   "compress_output": "file",
   "compress_output_name": "compressed.pdf"
+}
+```
+
+#### Watermark PDF
+```json
+{
+  "resource": "pdfManipulation",
+  "operation": "watermarkPdf",
+  "watermark_input_type": "url",
+  "watermark_file_url": "https://example.com/document.pdf",
+  "watermark_output_format": "file",
+  "watermark_text": "CONFIDENTIAL",
+  "watermark_opacity": 0.15,
+  "watermark_angle": 30
+}
+```
+
+#### Convert PDF to Image
+```json
+{
+  "resource": "pdfManipulation",
+  "operation": "convertPdfToImage",
+  "convert_pdf_image_input_type": "url",
+  "convert_pdf_image_url": "https://example.com/document.pdf",
+  "convert_pdf_image_pages": "1-3",
+  "convert_pdf_image_format": "png",
+  "convert_pdf_image_output": "url"
+}
+```
+
+#### Convert Image to PDF
+```json
+{
+  "resource": "pdfManipulation",
+  "operation": "convertImageToPdf",
+  "convert_image_pdf_urls": "https://example.com/a.png, https://example.com/b.jpg",
+  "convert_image_pdf_output": "file",
+  "convert_image_pdf_filename": "combined-images.pdf"
 }
 ```
 
@@ -276,6 +393,7 @@ Parse a PDF into structured JSON.
 {
   "resource": "pdfSecurity",
   "operation": "lockPdf",
+  "lock_input_type": "url",
   "lock_url": "https://example.com/document.pdf",
   "lock_password": "your-password",
   "lock_output": "file",
@@ -288,6 +406,7 @@ Parse a PDF into structured JSON.
 {
   "resource": "pdfSecurity",
   "operation": "unlockPdf",
+  "unlock_input_type": "url",
   "unlock_url": "https://example.com/locked.pdf",
   "unlock_password": "your-password",
   "unlock_output": "file",
@@ -302,11 +421,26 @@ Parse a PDF into structured JSON.
 {
   "resource": "pdfParsing",
   "operation": "parsePdf",
+  "parse_input_type": "url",
   "parse_url": "https://example.com/document.pdf",
   "parse_mode": "full",
   "parse_pages": "all"
 }
 ```
+
+#### Parse PDF with OCR
+```json
+{
+  "resource": "pdfParsing",
+  "operation": "parsePdfOcr",
+  "parse_input_type": "url",
+  "parse_url": "https://example.com/scanned.pdf",
+  "lang": "eng",
+  "parse_pages": "all",
+  "dpi": 200,
+  "psm": 3,
+  "oem": 3
+}
 ```
 
 ## Use Cases
