@@ -1225,12 +1225,88 @@ export class Htmlcsstopdf implements INodeType {
 			}
 		};
 
+		const prepareBinaryResponse = async (
+			itemIndex: number,
+			responseData: { body: ArrayBuffer; headers?: Record<string, unknown> },
+			fallbackFileName: string,
+			fallbackMimeType: string,
+		) => {
+			const headers = responseData.headers ?? {};
+			const contentTypeHeader =
+				(typeof headers['content-type'] === 'string' ? headers['content-type'] : undefined) ??
+				(typeof headers['Content-Type'] === 'string' ? headers['Content-Type'] : undefined);
+
+			const contentType = contentTypeHeader?.split(';')[0]?.trim() || fallbackMimeType;
+			let fileName = fallbackFileName;
+
+			if (!fileName) {
+				fileName = 'output';
+			}
+
+			if (!fileName.includes('.') && contentType.includes('/')) {
+				const ext = contentType.includes('pdf')
+					? 'pdf'
+					: contentType.includes('zip')
+						? 'zip'
+						: 'bin';
+				fileName = `${fileName}.${ext}`;
+			}
+
+			const binaryData = await this.helpers.prepareBinaryData(
+				Buffer.from(responseData.body),
+				fileName,
+				contentType,
+			);
+
+			returnData.push({
+				json: { success: true },
+				binary: { data: binaryData },
+				pairedItem: { item: itemIndex },
+			});
+		};
+
+		const createMultipartBody = (
+			fields: Record<string, unknown>,
+			files: Array<{ fieldName: string; fileName: string; contentType: string; data: Buffer }>,
+		): { body: Buffer; headers: { 'Content-Type': string } } => {
+			const boundary = `----n8nBoundary${Date.now().toString(16)}${Math.random().toString(16).slice(2)}`;
+			const chunks: Buffer[] = [];
+
+			for (const [key, value] of Object.entries(fields)) {
+				if (value === undefined || value === null) continue;
+				chunks.push(
+					Buffer.from(
+						`--${boundary}\r\nContent-Disposition: form-data; name="${key}"\r\n\r\n${String(value)}\r\n`,
+					),
+				);
+			}
+
+			for (const file of files) {
+				chunks.push(
+					Buffer.from(
+						`--${boundary}\r\nContent-Disposition: form-data; name="${file.fieldName}"; filename="${file.fileName}"\r\nContent-Type: ${file.contentType}\r\n\r\n`,
+					),
+				);
+				chunks.push(file.data);
+				chunks.push(Buffer.from('\r\n'));
+			}
+
+			chunks.push(Buffer.from(`--${boundary}--\r\n`));
+
+			return {
+				body: Buffer.concat(chunks),
+				headers: {
+					'Content-Type': `multipart/form-data; boundary=${boundary}`,
+				},
+			};
+		};
+
 		const createSingleFileMultipart = async (
 			itemIndex: number,
 			binaryPropertyName: string,
 			fileFieldName: string,
 			fields: Record<string, unknown>,
-		): Promise<{ formData: Record<string, unknown> }> => {
+		): Promise<{ body: Buffer; headers: { 'Content-Type': string } }> => {
 			const binaryItem = items[itemIndex].binary?.[binaryPropertyName] as
 				| { fileName?: string; mimeType?: string }
 				| undefined;
@@ -1243,16 +1319,15 @@ export class Htmlcsstopdf implements INodeType {
 			}
 
 			const fileBuffer = await this.helpers.getBinaryDataBuffer(itemIndex, binaryPropertyName);
-			const formData: Record<string, unknown> = { ...fields };
-			formData[fileFieldName] = {
-				value: fileBuffer,
-				options: {
-					filename: binaryItem.fileName ?? `${fileFieldName}.pdf`,
-					contentType: binaryItem.mimeType ?? 'application/pdf',
-				},
-			};
 
-			return { formData };
+			return createMultipartBody(fields, [
+				{
+					fieldName: fileFieldName,
+					fileName: binaryItem.fileName ?? `${fileFieldName}.pdf`,
+					contentType: binaryItem.mimeType ?? 'application/pdf',
+					data: fileBuffer,
+				},
+			]);
 		};
 
 		const createMultiFileMultipart = async (
@@ -1260,9 +1335,13 @@ export class Htmlcsstopdf implements INodeType {
 			binaryPropertyNames: string[],
 			fileFieldName: string,
 			fields: Record<string, unknown>,
-		): Promise<{ formData: Record<string, unknown> }> => {
-			const formData: Record<string, unknown> = { ...fields };
-			const files: Array<{ value: Buffer; options: { filename: string; contentType: string } }> = [];
+		): Promise<{ body: Buffer; headers: { 'Content-Type': string } }> => {
+			const files: Array<{
+				fieldName: string;
+				fileName: string;
+				contentType: string;
+				data: Buffer;
+			}> = [];
 
 			for (const binaryPropertyName of binaryPropertyNames) {
 				const trimmed = binaryPropertyName.trim();
@@ -1280,11 +1359,10 @@ export class Htmlcsstopdf implements INodeType {
 
 				const fileBuffer = await this.helpers.getBinaryDataBuffer(itemIndex, trimmed);
 				files.push({
-					value: fileBuffer,
-					options: {
-						filename: binaryItem.fileName ?? `${trimmed}.pdf`,
-						contentType: binaryItem.mimeType ?? 'application/pdf',
-					},
+					fieldName: fileFieldName,
+					fileName: binaryItem.fileName ?? `${trimmed}.pdf`,
+					contentType: binaryItem.mimeType ?? 'application/pdf',
+					data: fileBuffer,
 				});
 			}
 
@@ -1294,8 +1372,7 @@ export class Htmlcsstopdf implements INodeType {
 				});
 			}
 
-			formData[fileFieldName] = files;
-			return { formData };
+			return createMultipartBody(fields, files);
 		};
 
 		for (let i = 0; i < items.length; i++) {
@@ -1365,17 +1442,12 @@ export class Htmlcsstopdf implements INodeType {
 							continue;
 						}
 
-						const binaryData = await this.helpers.prepareBinaryData(
-							Buffer.from(responseData.body as ArrayBuffer),
+						await prepareBinaryResponse(
+							i,
+							responseData as { body: ArrayBuffer; headers?: Record<string, unknown> },
 							`${outputFilename}.pdf`,
 							'application/pdf',
 						);
-
-						returnData.push({
-							json: { success: true },
-							binary: { data: binaryData },
-							pairedItem: { item: i },
-						});
 					} else {
 						const responseData = await this.helpers.httpRequestWithAuthentication.call(
 							this,
@@ -1467,17 +1539,12 @@ export class Htmlcsstopdf implements INodeType {
 								continue;
 							}
 
-							const binaryData = await this.helpers.prepareBinaryData(
-								Buffer.from(responseData.body as ArrayBuffer),
+							await prepareBinaryResponse(
+								i,
+								responseData as { body: ArrayBuffer; headers?: Record<string, unknown> },
 								'merged.pdf',
 								'application/pdf',
 							);
-
-							returnData.push({
-								json: { success: true },
-								binary: { data: binaryData },
-								pairedItem: { item: i },
-							});
 						} else {
 							const responseData = await this.helpers.httpRequestWithAuthentication.call(
 								this,
@@ -1550,17 +1617,12 @@ export class Htmlcsstopdf implements INodeType {
 								continue;
 							}
 
-							const binaryData = await this.helpers.prepareBinaryData(
-								Buffer.from(responseData.body as ArrayBuffer),
+							await prepareBinaryResponse(
+								i,
+								responseData as { body: ArrayBuffer; headers?: Record<string, unknown> },
 								'split.pdf',
 								'application/pdf',
 							);
-
-							returnData.push({
-								json: { success: true },
-								binary: { data: binaryData },
-								pairedItem: { item: i },
-							});
 						} else {
 							const responseData = await this.helpers.httpRequestWithAuthentication.call(
 								this,
@@ -1628,17 +1690,12 @@ export class Htmlcsstopdf implements INodeType {
 								continue;
 							}
 
-							const binaryData = await this.helpers.prepareBinaryData(
-								Buffer.from(responseData.body as ArrayBuffer),
+							await prepareBinaryResponse(
+								i,
+								responseData as { body: ArrayBuffer; headers?: Record<string, unknown> },
 								outputName,
 								'application/pdf',
 							);
-
-							returnData.push({
-								json: { success: true },
-								binary: { data: binaryData },
-								pairedItem: { item: i },
-							});
 						} else {
 							const responseData = await this.helpers.httpRequestWithAuthentication.call(
 								this,
@@ -1713,17 +1770,12 @@ export class Htmlcsstopdf implements INodeType {
 								continue;
 							}
 
-							const binaryData = await this.helpers.prepareBinaryData(
-								Buffer.from(responseData.body as ArrayBuffer),
+							await prepareBinaryResponse(
+								i,
+								responseData as { body: ArrayBuffer; headers?: Record<string, unknown> },
 								'watermarked.pdf',
 								'application/pdf',
 							);
-
-							returnData.push({
-								json: { success: true },
-								binary: { data: binaryData },
-								pairedItem: { item: i },
-							});
 						} else {
 							const responseData = await this.helpers.httpRequestWithAuthentication.call(
 								this,
@@ -1801,23 +1853,12 @@ export class Htmlcsstopdf implements INodeType {
 								continue;
 							}
 
-							const headers = (responseData as { headers?: IDataObject }).headers ?? {};
-							const contentType = (headers['content-type'] as string) ?? 'application/octet-stream';
-							const filename = contentType.includes('zip')
-								? 'pdf-to-images.zip'
-								: `pdf-page.${imageFormat === 'jpg' ? 'jpg' : imageFormat}`;
-
-							const binaryData = await this.helpers.prepareBinaryData(
-								Buffer.from(responseData.body as ArrayBuffer),
-								filename,
-								contentType,
+							await prepareBinaryResponse(
+								i,
+								responseData as { body: ArrayBuffer; headers?: Record<string, unknown> },
+								`pdf-page.${imageFormat === 'jpg' ? 'jpg' : imageFormat}`,
+								'application/octet-stream',
 							);
-
-							returnData.push({
-								json: { success: true },
-								binary: { data: binaryData },
-								pairedItem: { item: i },
-							});
 						} else {
 							const responseData = await this.helpers.httpRequestWithAuthentication.call(
 								this,
@@ -1893,17 +1934,12 @@ export class Htmlcsstopdf implements INodeType {
 								continue;
 							}
 
-							const binaryData = await this.helpers.prepareBinaryData(
-								Buffer.from(responseData.body as ArrayBuffer),
+							await prepareBinaryResponse(
+								i,
+								responseData as { body: ArrayBuffer; headers?: Record<string, unknown> },
 								outputFilename.endsWith('.pdf') ? outputFilename : `${outputFilename}.pdf`,
 								'application/pdf',
 							);
-
-							returnData.push({
-								json: { success: true },
-								binary: { data: binaryData },
-								pairedItem: { item: i },
-							});
 						} else {
 							const responseData = await this.helpers.httpRequestWithAuthentication.call(
 								this,
@@ -1980,17 +2016,12 @@ export class Htmlcsstopdf implements INodeType {
 								continue;
 							}
 
-							const binaryData = await this.helpers.prepareBinaryData(
-								Buffer.from(responseData.body as ArrayBuffer),
+							await prepareBinaryResponse(
+								i,
+								responseData as { body: ArrayBuffer; headers?: Record<string, unknown> },
 								outputName,
 								'application/pdf',
 							);
-
-							returnData.push({
-								json: { success: true },
-								binary: { data: binaryData },
-								pairedItem: { item: i },
-							});
 						} else {
 							const responseData = await this.helpers.httpRequestWithAuthentication.call(
 								this,
@@ -2058,17 +2089,12 @@ export class Htmlcsstopdf implements INodeType {
 								continue;
 							}
 
-							const binaryData = await this.helpers.prepareBinaryData(
-								Buffer.from(responseData.body as ArrayBuffer),
+							await prepareBinaryResponse(
+								i,
+								responseData as { body: ArrayBuffer; headers?: Record<string, unknown> },
 								outputName,
 								'application/pdf',
 							);
-
-							returnData.push({
-								json: { success: true },
-								binary: { data: binaryData },
-								pairedItem: { item: i },
-							});
 						} else {
 							const responseData = await this.helpers.httpRequestWithAuthentication.call(
 								this,
