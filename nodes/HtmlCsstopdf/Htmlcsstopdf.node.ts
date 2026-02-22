@@ -114,6 +114,12 @@ export class Htmlcsstopdf implements INodeType {
 						description: 'Compress a PDF to reduce file size',
 						action: 'Compress PDF',
 					},
+					{
+						name: 'Watermark PDF',
+						value: 'watermarkPdf',
+						description: 'Add a text watermark to a PDF',
+						action: 'Watermark PDF',
+					},
 				],
 				default: 'mergePdfs',
 			},
@@ -494,6 +500,85 @@ export class Htmlcsstopdf implements INodeType {
 				displayOptions: {
 					show: {
 						operation: ['compressPdf'],
+					},
+				},
+			},
+			// Properties for Watermark PDF
+			{
+				displayName: 'PDF URL',
+				name: 'watermark_file_url',
+				type: 'string',
+				default: '',
+				description: 'Public URL of the PDF to watermark',
+				displayOptions: {
+					show: {
+						operation: ['watermarkPdf'],
+					},
+				},
+			},
+			{
+				displayName: 'Output Format',
+				name: 'watermark_output_format',
+				type: 'options',
+				options: [
+					{ name: 'File', value: 'file' },
+					{ name: 'URL', value: 'url' },
+					{ name: 'Base64', value: 'base64' },
+					{ name: 'Both', value: 'both' },
+				],
+				default: 'file',
+				description: 'Format of the watermarked output',
+				displayOptions: {
+					show: {
+						operation: ['watermarkPdf'],
+					},
+				},
+			},
+			{
+				displayName: 'Watermark Text',
+				name: 'watermark_text',
+				type: 'string',
+				default: 'CONFIDENTIAL',
+				description: 'Watermark text to apply',
+				displayOptions: {
+					show: {
+						operation: ['watermarkPdf'],
+					},
+				},
+			},
+			{
+				displayName: 'Opacity',
+				name: 'watermark_opacity',
+				type: 'number',
+				default: 0.15,
+				description: 'Watermark opacity from 0.0 to 1.0',
+				displayOptions: {
+					show: {
+						operation: ['watermarkPdf'],
+					},
+				},
+			},
+			{
+				displayName: 'Angle',
+				name: 'watermark_angle',
+				type: 'number',
+				default: 30,
+				description: 'Watermark rotation angle in degrees',
+				displayOptions: {
+					show: {
+						operation: ['watermarkPdf'],
+					},
+				},
+			},
+			{
+				displayName: 'Font Size',
+				name: 'watermark_font_size',
+				type: 'number',
+				default: 0,
+				description: 'Optional font size override (set 0 to use API default)',
+				displayOptions: {
+					show: {
+						operation: ['watermarkPdf'],
 					},
 				},
 			},
@@ -1055,6 +1140,80 @@ export class Htmlcsstopdf implements INodeType {
 								{
 									method: 'POST',
 									url: 'https://pdfmunk.com/api/v1/compressPdf',
+									body,
+									json: true,
+									returnFullResponse: true,
+								},
+							);
+							const statusCode = (responseData as { statusCode?: number }).statusCode ?? 0;
+							const bodyData = toJsonObject((responseData as { body?: unknown }).body);
+							returnData.push({
+								json: statusCode >= 400 ? { ...bodyData, statusCode } : bodyData,
+								pairedItem: { item: i },
+							});
+						}
+					} else if (operation === 'watermarkPdf') {
+						const fileUrl = this.getNodeParameter('watermark_file_url', i) as string;
+						const outputFormat = this.getNodeParameter('watermark_output_format', i) as string;
+						const text = this.getNodeParameter('watermark_text', i) as string;
+						const opacity = this.getNodeParameter('watermark_opacity', i) as number;
+						const angle = this.getNodeParameter('watermark_angle', i) as number;
+						const fontSize = this.getNodeParameter('watermark_font_size', i) as number;
+
+						const body: Record<string, unknown> = {
+							file_url: fileUrl,
+							output_format: outputFormat,
+							text,
+							opacity,
+							angle,
+						};
+
+						if (fontSize > 0) {
+							body.font_size = fontSize;
+						}
+
+						if (outputFormat === 'file') {
+							const responseData = await this.helpers.httpRequestWithAuthentication.call(
+								this,
+								'htmlcsstopdfApi',
+								{
+									method: 'POST',
+									url: 'https://pdfmunk.com/api/v1/watermark',
+									body,
+									json: true,
+									encoding: 'arraybuffer',
+									returnFullResponse: true,
+								},
+							);
+
+							const statusCode = (responseData as { statusCode?: number }).statusCode ?? 0;
+							if (statusCode >= 400) {
+								const errorBody = parseArrayBufferBody((responseData as { body?: unknown }).body);
+								returnData.push({
+									json: { ...errorBody, statusCode },
+									pairedItem: { item: i },
+								});
+								continue;
+							}
+
+							const binaryData = await this.helpers.prepareBinaryData(
+								Buffer.from(responseData.body as ArrayBuffer),
+								'watermarked.pdf',
+								'application/pdf',
+							);
+
+							returnData.push({
+								json: { success: true },
+								binary: { data: binaryData },
+								pairedItem: { item: i },
+							});
+						} else {
+							const responseData = await this.helpers.httpRequestWithAuthentication.call(
+								this,
+								'htmlcsstopdfApi',
+								{
+									method: 'POST',
+									url: 'https://pdfmunk.com/api/v1/watermark',
 									body,
 									json: true,
 									returnFullResponse: true,
