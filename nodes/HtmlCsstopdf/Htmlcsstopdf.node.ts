@@ -97,6 +97,24 @@ export class Htmlcsstopdf implements INodeType {
 				},
 				options: [
 					{
+						name: 'Compress PDF',
+						value: 'compressPdf',
+						description: 'Compress a PDF to reduce file size',
+						action: 'Compress PDF',
+					},
+					{
+						name: 'Convert Image to PDF',
+						value: 'convertImageToPdf',
+						description: 'Convert one or more images into a PDF',
+						action: 'Convert image to PDF',
+					},
+					{
+						name: 'Convert PDF to Image',
+						value: 'convertPdfToImage',
+						description: 'Convert PDF pages into image files',
+						action: 'Convert PDF to image',
+					},
+					{
 						name: 'Merge PDFs',
 						value: 'mergePdfs',
 						description: 'Merge multiple PDF files into one',
@@ -107,12 +125,6 @@ export class Htmlcsstopdf implements INodeType {
 						value: 'splitPdf',
 						description: 'Split or extract pages from a PDF',
 						action: 'Split PDF',
-					},
-					{
-						name: 'Compress PDF',
-						value: 'compressPdf',
-						description: 'Compress a PDF to reduce file size',
-						action: 'Compress PDF',
 					},
 					{
 						name: 'Watermark PDF',
@@ -171,8 +183,8 @@ export class Htmlcsstopdf implements INodeType {
 					{
 						name: 'Parse PDF with OCR',
 						value: 'parsePdfOcr',
-						description: 'Extract OCR text from scanned PDF pages',
-						action: 'OCR parse PDF',
+						description: 'Extract text using ocr from scanned pdf pages',
+						action: 'Parse PDF with OCR',
 					},
 				],
 				default: 'parsePdf',
@@ -342,6 +354,22 @@ export class Htmlcsstopdf implements INodeType {
 			},
 			// Properties for Merge PDFs
 			{
+				displayName: 'Input Type',
+				name: 'merge_input_type',
+				type: 'options',
+				options: [
+					{ name: 'URL', value: 'url' },
+					{ name: 'File', value: 'file' },
+				],
+				default: 'url',
+				description: 'Choose whether to merge by URL or binary file input',
+				displayOptions: {
+					show: {
+						operation: ['mergePdfs'],
+					},
+				},
+			},
+			{
 				displayName: 'PDF URLs',
 				name: 'pdf_urls',
 				type: 'string',
@@ -350,6 +378,20 @@ export class Htmlcsstopdf implements INodeType {
 				displayOptions: {
 					show: {
 						operation: ['mergePdfs'],
+						merge_input_type: ['url'],
+					},
+				},
+			},
+			{
+				displayName: 'File Binary Properties',
+				name: 'merge_file_binary_properties',
+				type: 'string',
+				default: 'data',
+				description: 'Comma-separated binary property names to merge (minimum 2), for example data1,data2',
+				displayOptions: {
+					show: {
+						operation: ['mergePdfs'],
+						merge_input_type: ['file'],
 					},
 				},
 			},
@@ -372,6 +414,22 @@ export class Htmlcsstopdf implements INodeType {
 			},
 			// Properties for Split PDF
 			{
+				displayName: 'Input Type',
+				name: 'split_input_type',
+				type: 'options',
+				options: [
+					{ name: 'URL', value: 'url' },
+					{ name: 'File', value: 'file' },
+				],
+				default: 'url',
+				description: 'Choose whether to split by URL or binary file input',
+				displayOptions: {
+					show: {
+						operation: ['splitPdf'],
+					},
+				},
+			},
+			{
 				displayName: 'PDF URL',
 				name: 'split_url',
 				type: 'string',
@@ -380,6 +438,20 @@ export class Htmlcsstopdf implements INodeType {
 				displayOptions: {
 					show: {
 						operation: ['splitPdf'],
+						split_input_type: ['url'],
+					},
+				},
+			},
+			{
+				displayName: 'File Binary Property',
+				name: 'split_file_binary_property',
+				type: 'string',
+				default: 'data',
+				description: 'Binary property containing the PDF file',
+				displayOptions: {
+					show: {
+						operation: ['splitPdf'],
+						split_input_type: ['file'],
 					},
 				},
 			},
@@ -445,6 +517,22 @@ export class Htmlcsstopdf implements INodeType {
 			},
 			// Properties for Compress PDF
 			{
+				displayName: 'Input Type',
+				name: 'compress_input_type',
+				type: 'options',
+				options: [
+					{ name: 'URL', value: 'url' },
+					{ name: 'File', value: 'file' },
+				],
+				default: 'url',
+				description: 'Choose whether to compress by URL or binary file input',
+				displayOptions: {
+					show: {
+						operation: ['compressPdf'],
+					},
+				},
+			},
+			{
 				displayName: 'PDF URL',
 				name: 'compress_url',
 				type: 'string',
@@ -453,6 +541,20 @@ export class Htmlcsstopdf implements INodeType {
 				displayOptions: {
 					show: {
 						operation: ['compressPdf'],
+						compress_input_type: ['url'],
+					},
+				},
+			},
+			{
+				displayName: 'File Binary Property',
+				name: 'compress_file_binary_property',
+				type: 'string',
+				default: 'data',
+				description: 'Binary property containing the PDF file',
+				displayOptions: {
+					show: {
+						operation: ['compressPdf'],
+						compress_input_type: ['file'],
 					},
 				},
 			},
@@ -505,6 +607,22 @@ export class Htmlcsstopdf implements INodeType {
 			},
 			// Properties for Watermark PDF
 			{
+				displayName: 'Input Type',
+				name: 'watermark_input_type',
+				type: 'options',
+				options: [
+					{ name: 'URL', value: 'url' },
+					{ name: 'File', value: 'file' },
+				],
+				default: 'url',
+				description: 'Choose whether to watermark by URL or binary file input',
+				displayOptions: {
+					show: {
+						operation: ['watermarkPdf'],
+					},
+				},
+			},
+			{
 				displayName: 'PDF URL',
 				name: 'watermark_file_url',
 				type: 'string',
@@ -513,6 +631,20 @@ export class Htmlcsstopdf implements INodeType {
 				displayOptions: {
 					show: {
 						operation: ['watermarkPdf'],
+						watermark_input_type: ['url'],
+					},
+				},
+			},
+			{
+				displayName: 'File Binary Property',
+				name: 'watermark_file_binary_property',
+				type: 'string',
+				default: 'data',
+				description: 'Binary property containing the PDF file',
+				displayOptions: {
+					show: {
+						operation: ['watermarkPdf'],
+						watermark_input_type: ['file'],
 					},
 				},
 			},
@@ -582,7 +714,193 @@ export class Htmlcsstopdf implements INodeType {
 					},
 				},
 			},
+			// Properties for Convert PDF to Image
+			{
+				displayName: 'Input Type',
+				name: 'convert_pdf_image_input_type',
+				type: 'options',
+				options: [
+					{ name: 'URL', value: 'url' },
+					{ name: 'File', value: 'file' },
+				],
+				default: 'url',
+				description: 'Choose whether to convert by URL or binary file input',
+				displayOptions: {
+					show: {
+						operation: ['convertPdfToImage'],
+					},
+				},
+			},
+			{
+				displayName: 'PDF URL',
+				name: 'convert_pdf_image_url',
+				type: 'string',
+				default: '',
+				description: 'Public URL of the PDF to convert',
+				displayOptions: {
+					show: {
+						operation: ['convertPdfToImage'],
+						convert_pdf_image_input_type: ['url'],
+					},
+				},
+			},
+			{
+				displayName: 'File Binary Property',
+				name: 'convert_pdf_image_file_binary_property',
+				type: 'string',
+				default: 'data',
+				description: 'Binary property containing the PDF file',
+				displayOptions: {
+					show: {
+						operation: ['convertPdfToImage'],
+						convert_pdf_image_input_type: ['file'],
+					},
+				},
+			},
+			{
+				displayName: 'Page',
+				name: 'convert_pdf_image_page',
+				type: 'number',
+				default: 1,
+				description: 'Single page number to convert (used when Pages is empty)',
+				displayOptions: {
+					show: {
+						operation: ['convertPdfToImage'],
+					},
+				},
+			},
+			{
+				displayName: 'Pages',
+				name: 'convert_pdf_image_pages',
+				type: 'string',
+				default: '',
+				description: 'Optional pages selection, for example 1-3 or 1,3,5',
+				displayOptions: {
+					show: {
+						operation: ['convertPdfToImage'],
+					},
+				},
+			},
+			{
+				displayName: 'Image Format',
+				name: 'convert_pdf_image_format',
+				type: 'options',
+				options: [
+					{ name: 'PNG', value: 'png' },
+					{ name: 'JPG', value: 'jpg' },
+					{ name: 'JPEG', value: 'jpeg' },
+					{ name: 'WEBP', value: 'webp' },
+				],
+				default: 'png',
+				description: 'Output image format',
+				displayOptions: {
+					show: {
+						operation: ['convertPdfToImage'],
+					},
+				},
+			},
+			{
+				displayName: 'DPI',
+				name: 'convert_pdf_image_dpi',
+				type: 'number',
+				default: 150,
+				description: 'Rasterization DPI (72-300)',
+				displayOptions: {
+					show: {
+						operation: ['convertPdfToImage'],
+					},
+				},
+			},
+			{
+				displayName: 'Quality',
+				name: 'convert_pdf_image_quality',
+				type: 'number',
+				default: 85,
+				description: 'Image quality from 1 to 100',
+				displayOptions: {
+					show: {
+						operation: ['convertPdfToImage'],
+					},
+				},
+			},
+			{
+				displayName: 'Output Type',
+				name: 'convert_pdf_image_output',
+				type: 'options',
+				options: [
+					{ name: 'URL', value: 'url' },
+					{ name: 'Base64', value: 'base64' },
+					{ name: 'Both', value: 'both' },
+					{ name: 'File', value: 'file' },
+				],
+				default: 'url',
+				description: 'Format of the converted image output',
+				displayOptions: {
+					show: {
+						operation: ['convertPdfToImage'],
+					},
+				},
+			},
+			// Properties for Convert Image to PDF
+			{
+				displayName: 'Image URLs',
+				name: 'convert_image_pdf_urls',
+				type: 'string',
+				default: '',
+				description: 'Single URL or comma-separated image URLs (max 100)',
+				displayOptions: {
+					show: {
+						operation: ['convertImageToPdf'],
+					},
+				},
+			},
+			{
+				displayName: 'Output Type',
+				name: 'convert_image_pdf_output',
+				type: 'options',
+				options: [
+					{ name: 'URL', value: 'url' },
+					{ name: 'Base64', value: 'base64' },
+					{ name: 'Both', value: 'both' },
+					{ name: 'File', value: 'file' },
+				],
+				default: 'url',
+				description: 'Format of the generated PDF output',
+				displayOptions: {
+					show: {
+						operation: ['convertImageToPdf'],
+					},
+				},
+			},
+			{
+				displayName: 'Output Filename',
+				name: 'convert_image_pdf_filename',
+				type: 'string',
+				default: 'combined-images.pdf',
+				description: 'Optional output filename for file mode',
+				displayOptions: {
+					show: {
+						operation: ['convertImageToPdf'],
+					},
+				},
+			},
 			// Properties for Lock PDF
+			{
+				displayName: 'Input Type',
+				name: 'lock_input_type',
+				type: 'options',
+				options: [
+					{ name: 'URL', value: 'url' },
+					{ name: 'File', value: 'file' },
+				],
+				default: 'url',
+				description: 'Choose whether to lock by URL or binary file input',
+				displayOptions: {
+					show: {
+						operation: ['lockPdf'],
+					},
+				},
+			},
 			{
 				displayName: 'PDF URL',
 				name: 'lock_url',
@@ -592,6 +910,20 @@ export class Htmlcsstopdf implements INodeType {
 				displayOptions: {
 					show: {
 						operation: ['lockPdf'],
+						lock_input_type: ['url'],
+					},
+				},
+			},
+			{
+				displayName: 'File Binary Property',
+				name: 'lock_file_binary_property',
+				type: 'string',
+				default: 'data',
+				description: 'Binary property containing the PDF file',
+				displayOptions: {
+					show: {
+						operation: ['lockPdf'],
+						lock_input_type: ['file'],
 					},
 				},
 			},
@@ -656,6 +988,22 @@ export class Htmlcsstopdf implements INodeType {
 			},
 			// Properties for Unlock PDF
 			{
+				displayName: 'Input Type',
+				name: 'unlock_input_type',
+				type: 'options',
+				options: [
+					{ name: 'URL', value: 'url' },
+					{ name: 'File', value: 'file' },
+				],
+				default: 'url',
+				description: 'Choose whether to unlock by URL or binary file input',
+				displayOptions: {
+					show: {
+						operation: ['unlockPdf'],
+					},
+				},
+			},
+			{
 				displayName: 'PDF URL',
 				name: 'unlock_url',
 				type: 'string',
@@ -664,6 +1012,20 @@ export class Htmlcsstopdf implements INodeType {
 				displayOptions: {
 					show: {
 						operation: ['unlockPdf'],
+						unlock_input_type: ['url'],
+					},
+				},
+			},
+			{
+				displayName: 'File Binary Property',
+				name: 'unlock_file_binary_property',
+				type: 'string',
+				default: 'data',
+				description: 'Binary property containing the PDF file',
+				displayOptions: {
+					show: {
+						operation: ['unlockPdf'],
+						unlock_input_type: ['file'],
 					},
 				},
 			},
@@ -713,6 +1075,22 @@ export class Htmlcsstopdf implements INodeType {
 			},
 			// Properties for Parse PDF
 			{
+				displayName: 'Input Type',
+				name: 'parse_input_type',
+				type: 'options',
+				options: [
+					{ name: 'URL', value: 'url' },
+					{ name: 'File', value: 'file' },
+				],
+				default: 'url',
+				description: 'Choose whether to parse by URL or binary file input',
+				displayOptions: {
+					show: {
+						operation: ['parsePdf', 'parsePdfOcr'],
+					},
+				},
+			},
+			{
 				displayName: 'PDF URL',
 				name: 'parse_url',
 				type: 'string',
@@ -721,6 +1099,20 @@ export class Htmlcsstopdf implements INodeType {
 				displayOptions: {
 					show: {
 						operation: ['parsePdf', 'parsePdfOcr'],
+						parse_input_type: ['url'],
+					},
+				},
+			},
+			{
+				displayName: 'File Binary Property',
+				name: 'parse_file_binary_property',
+				type: 'string',
+				default: 'data',
+				description: 'Binary property containing the PDF file',
+				displayOptions: {
+					show: {
+						operation: ['parsePdf', 'parsePdfOcr'],
+						parse_input_type: ['file'],
 					},
 				},
 			},
@@ -833,6 +1225,79 @@ export class Htmlcsstopdf implements INodeType {
 			}
 		};
 
+		const createSingleFileMultipart = async (
+			itemIndex: number,
+			binaryPropertyName: string,
+			fileFieldName: string,
+			fields: Record<string, unknown>,
+		): Promise<{ formData: Record<string, unknown> }> => {
+			const binaryItem = items[itemIndex].binary?.[binaryPropertyName] as
+				| { fileName?: string; mimeType?: string }
+				| undefined;
+			if (!binaryItem) {
+				throw new NodeOperationError(
+					this.getNode(),
+					`Binary property "${binaryPropertyName}" not found`,
+					{ itemIndex },
+				);
+			}
+
+			const fileBuffer = await this.helpers.getBinaryDataBuffer(itemIndex, binaryPropertyName);
+			const formData: Record<string, unknown> = { ...fields };
+			formData[fileFieldName] = {
+				value: fileBuffer,
+				options: {
+					filename: binaryItem.fileName ?? `${fileFieldName}.pdf`,
+					contentType: binaryItem.mimeType ?? 'application/pdf',
+				},
+			};
+
+			return { formData };
+		};
+
+		const createMultiFileMultipart = async (
+			itemIndex: number,
+			binaryPropertyNames: string[],
+			fileFieldName: string,
+			fields: Record<string, unknown>,
+		): Promise<{ formData: Record<string, unknown> }> => {
+			const formData: Record<string, unknown> = { ...fields };
+			const files: Array<{ value: Buffer; options: { filename: string; contentType: string } }> = [];
+
+			for (const binaryPropertyName of binaryPropertyNames) {
+				const trimmed = binaryPropertyName.trim();
+				if (!trimmed) continue;
+				const binaryItem = items[itemIndex].binary?.[trimmed] as
+					| { fileName?: string; mimeType?: string }
+					| undefined;
+				if (!binaryItem) {
+					throw new NodeOperationError(
+						this.getNode(),
+						`Binary property "${trimmed}" not found`,
+						{ itemIndex },
+					);
+				}
+
+				const fileBuffer = await this.helpers.getBinaryDataBuffer(itemIndex, trimmed);
+				files.push({
+					value: fileBuffer,
+					options: {
+						filename: binaryItem.fileName ?? `${trimmed}.pdf`,
+						contentType: binaryItem.mimeType ?? 'application/pdf',
+					},
+				});
+			}
+
+			if (files.length < 2) {
+				throw new NodeOperationError(this.getNode(), 'At least 2 binary PDF properties are required', {
+					itemIndex,
+				});
+			}
+
+			formData[fileFieldName] = files;
+			return { formData };
+		};
+
 		for (let i = 0; i < items.length; i++) {
 			try {
 				const resource = this.getNodeParameter('resource', i) as string;
@@ -934,30 +1399,50 @@ export class Htmlcsstopdf implements INodeType {
 				} else if (resource === 'pdfManipulation') {
 					// Handle PDF Manipulation operations
 					if (operation === 'mergePdfs') {
-						const pdfUrlsString = this.getNodeParameter('pdf_urls', i) as string;
-						const urls = pdfUrlsString.split(',').map((url) => url.trim()).filter((url) => url);
+						const mergeInputType = this.getNodeParameter('merge_input_type', i) as string;
 						const outputType = this.getNodeParameter('merge_output', i) as string;
 
-						if (urls.length < 2) {
-							throw new NodeOperationError(
-								this.getNode(),
-								'At least 2 PDF URLs are required for merging',
-								{ itemIndex: i },
-							);
-						}
-
-						if (urls.length > 15) {
-							throw new NodeOperationError(
-								this.getNode(),
-								'Maximum 15 PDF URLs allowed for merging',
-								{ itemIndex: i },
-							);
-						}
-
-						const body = {
-							urls,
+						const body: Record<string, unknown> = {
 							output: outputType,
 						};
+
+						const requestOptions =
+							mergeInputType === 'file'
+								? await createMultiFileMultipart(
+										i,
+										(this.getNodeParameter('merge_file_binary_properties', i) as string)
+											.split(',')
+											.map((name) => name.trim())
+											.filter((name) => name),
+										'files',
+										body,
+								  )
+								: (() => {
+										const pdfUrlsString = this.getNodeParameter('pdf_urls', i) as string;
+										const urls = pdfUrlsString
+											.split(',')
+											.map((url) => url.trim())
+											.filter((url) => url);
+
+										if (urls.length < 2) {
+											throw new NodeOperationError(
+												this.getNode(),
+												'At least 2 PDF URLs are required for merging',
+												{ itemIndex: i },
+											);
+										}
+
+										if (urls.length > 15) {
+											throw new NodeOperationError(
+												this.getNode(),
+												'Maximum 15 PDF URLs allowed for merging',
+												{ itemIndex: i },
+											);
+										}
+
+										body.urls = urls;
+										return { body, json: true };
+								  })();
 
 						if (outputType === 'file') {
 							const responseData = await this.helpers.httpRequestWithAuthentication.call(
@@ -966,8 +1451,7 @@ export class Htmlcsstopdf implements INodeType {
 								{
 									method: 'POST',
 									url: 'https://pdfmunk.com/api/v1/pdf/merge',
-									body,
-									json: true,
+									...requestOptions,
 									encoding: 'arraybuffer',
 									returnFullResponse: true,
 								},
@@ -1001,8 +1485,7 @@ export class Htmlcsstopdf implements INodeType {
 								{
 									method: 'POST',
 									url: 'https://pdfmunk.com/api/v1/pdf/merge',
-									body,
-									json: true,
+									...requestOptions,
 									returnFullResponse: true,
 								},
 							);
@@ -1014,14 +1497,17 @@ export class Htmlcsstopdf implements INodeType {
 							});
 						}
 					} else if (operation === 'splitPdf') {
-						const pdfUrl = this.getNodeParameter('split_url', i) as string;
+						const splitInputType = this.getNodeParameter('split_input_type', i) as string;
 						const splitMode = this.getNodeParameter('split_mode', i) as string;
 						const outputType = this.getNodeParameter('split_output', i) as string;
 
 						const body: Record<string, unknown> = {
-							url: pdfUrl,
 							output: outputType,
 						};
+
+						if (splitInputType === 'url') {
+							body.url = this.getNodeParameter('split_url', i) as string;
+						}
 
 						if (splitMode === 'pages') {
 							body.pages = this.getNodeParameter('pages', i) as string;
@@ -1031,6 +1517,16 @@ export class Htmlcsstopdf implements INodeType {
 							body.chunks = this.getNodeParameter('chunks', i) as number;
 						}
 
+						const requestOptions =
+							splitInputType === 'file'
+								? await createSingleFileMultipart(
+										i,
+										this.getNodeParameter('split_file_binary_property', i) as string,
+										'file',
+										body,
+								  )
+								: { body, json: true };
+
 						if (outputType === 'file') {
 							const responseData = await this.helpers.httpRequestWithAuthentication.call(
 								this,
@@ -1038,8 +1534,7 @@ export class Htmlcsstopdf implements INodeType {
 								{
 									method: 'POST',
 									url: 'https://pdfmunk.com/api/v1/pdf/split',
-									body,
-									json: true,
+									...requestOptions,
 									encoding: 'arraybuffer',
 									returnFullResponse: true,
 								},
@@ -1073,8 +1568,7 @@ export class Htmlcsstopdf implements INodeType {
 								{
 									method: 'POST',
 									url: 'https://pdfmunk.com/api/v1/pdf/split',
-									body,
-									json: true,
+									...requestOptions,
 									returnFullResponse: true,
 								},
 							);
@@ -1086,17 +1580,30 @@ export class Htmlcsstopdf implements INodeType {
 							});
 						}
 					} else if (operation === 'compressPdf') {
-						const pdfUrl = this.getNodeParameter('compress_url', i) as string;
+						const compressInputType = this.getNodeParameter('compress_input_type', i) as string;
 						const compression = this.getNodeParameter('compression', i) as string;
 						const outputType = this.getNodeParameter('compress_output', i) as string;
 						const outputName = this.getNodeParameter('compress_output_name', i) as string;
 
-						const body = {
-							url: pdfUrl,
+						const body: Record<string, unknown> = {
 							compression,
 							output: outputType,
 							output_name: outputName,
 						};
+
+						if (compressInputType === 'url') {
+							body.url = this.getNodeParameter('compress_url', i) as string;
+						}
+
+						const requestOptions =
+							compressInputType === 'file'
+								? await createSingleFileMultipart(
+										i,
+										this.getNodeParameter('compress_file_binary_property', i) as string,
+										'file',
+										body,
+								  )
+								: { body, json: true };
 
 						if (outputType === 'file') {
 							const responseData = await this.helpers.httpRequestWithAuthentication.call(
@@ -1105,8 +1612,7 @@ export class Htmlcsstopdf implements INodeType {
 								{
 									method: 'POST',
 									url: 'https://pdfmunk.com/api/v1/compressPdf',
-									body,
-									json: true,
+									...requestOptions,
 									encoding: 'arraybuffer',
 									returnFullResponse: true,
 								},
@@ -1140,8 +1646,7 @@ export class Htmlcsstopdf implements INodeType {
 								{
 									method: 'POST',
 									url: 'https://pdfmunk.com/api/v1/compressPdf',
-									body,
-									json: true,
+									...requestOptions,
 									returnFullResponse: true,
 								},
 							);
@@ -1153,7 +1658,7 @@ export class Htmlcsstopdf implements INodeType {
 							});
 						}
 					} else if (operation === 'watermarkPdf') {
-						const fileUrl = this.getNodeParameter('watermark_file_url', i) as string;
+						const watermarkInputType = this.getNodeParameter('watermark_input_type', i) as string;
 						const outputFormat = this.getNodeParameter('watermark_output_format', i) as string;
 						const text = this.getNodeParameter('watermark_text', i) as string;
 						const opacity = this.getNodeParameter('watermark_opacity', i) as number;
@@ -1161,16 +1666,29 @@ export class Htmlcsstopdf implements INodeType {
 						const fontSize = this.getNodeParameter('watermark_font_size', i) as number;
 
 						const body: Record<string, unknown> = {
-							file_url: fileUrl,
 							output_format: outputFormat,
 							text,
 							opacity,
 							angle,
 						};
 
+						if (watermarkInputType === 'url') {
+							body.file_url = this.getNodeParameter('watermark_file_url', i) as string;
+						}
+
 						if (fontSize > 0) {
 							body.font_size = fontSize;
 						}
+
+						const requestOptions =
+							watermarkInputType === 'file'
+								? await createSingleFileMultipart(
+										i,
+										this.getNodeParameter('watermark_file_binary_property', i) as string,
+										'file',
+										body,
+								  )
+								: { body, json: true };
 
 						if (outputFormat === 'file') {
 							const responseData = await this.helpers.httpRequestWithAuthentication.call(
@@ -1179,8 +1697,7 @@ export class Htmlcsstopdf implements INodeType {
 								{
 									method: 'POST',
 									url: 'https://pdfmunk.com/api/v1/watermark',
-									body,
-									json: true,
+									...requestOptions,
 									encoding: 'arraybuffer',
 									returnFullResponse: true,
 								},
@@ -1214,6 +1731,186 @@ export class Htmlcsstopdf implements INodeType {
 								{
 									method: 'POST',
 									url: 'https://pdfmunk.com/api/v1/watermark',
+									...requestOptions,
+									returnFullResponse: true,
+								},
+							);
+							const statusCode = (responseData as { statusCode?: number }).statusCode ?? 0;
+							const bodyData = toJsonObject((responseData as { body?: unknown }).body);
+							returnData.push({
+								json: statusCode >= 400 ? { ...bodyData, statusCode } : bodyData,
+								pairedItem: { item: i },
+							});
+						}
+					} else if (operation === 'convertPdfToImage') {
+						const convertInputType = this.getNodeParameter('convert_pdf_image_input_type', i) as string;
+						const page = this.getNodeParameter('convert_pdf_image_page', i) as number;
+						const pages = this.getNodeParameter('convert_pdf_image_pages', i, '') as string;
+						const imageFormat = this.getNodeParameter('convert_pdf_image_format', i) as string;
+						const dpi = this.getNodeParameter('convert_pdf_image_dpi', i) as number;
+						const quality = this.getNodeParameter('convert_pdf_image_quality', i) as number;
+						const output = this.getNodeParameter('convert_pdf_image_output', i) as string;
+
+						const body: Record<string, unknown> = {
+							image_format: imageFormat,
+							dpi,
+							quality,
+							output,
+						};
+
+						if (convertInputType === 'url') {
+							body.url = this.getNodeParameter('convert_pdf_image_url', i) as string;
+						}
+
+						if ((pages ?? '').trim() !== '') {
+							body.pages = pages;
+						} else if (page > 0) {
+							body.page = page;
+						}
+
+						const requestOptions =
+							convertInputType === 'file'
+								? await createSingleFileMultipart(
+										i,
+										this.getNodeParameter('convert_pdf_image_file_binary_property', i) as string,
+										'file',
+										body,
+								  )
+								: { body, json: true };
+
+						if (output === 'file') {
+							const responseData = await this.helpers.httpRequestWithAuthentication.call(
+								this,
+								'htmlcsstopdfApi',
+								{
+									method: 'POST',
+									url: 'https://pdfmunk.com/api/v1/convert/pdf/image',
+									...requestOptions,
+									encoding: 'arraybuffer',
+									returnFullResponse: true,
+								},
+							);
+
+							const statusCode = (responseData as { statusCode?: number }).statusCode ?? 0;
+							if (statusCode >= 400) {
+								const errorBody = parseArrayBufferBody((responseData as { body?: unknown }).body);
+								returnData.push({
+									json: { ...errorBody, statusCode },
+									pairedItem: { item: i },
+								});
+								continue;
+							}
+
+							const headers = (responseData as { headers?: IDataObject }).headers ?? {};
+							const contentType = (headers['content-type'] as string) ?? 'application/octet-stream';
+							const filename = contentType.includes('zip')
+								? 'pdf-to-images.zip'
+								: `pdf-page.${imageFormat === 'jpg' ? 'jpg' : imageFormat}`;
+
+							const binaryData = await this.helpers.prepareBinaryData(
+								Buffer.from(responseData.body as ArrayBuffer),
+								filename,
+								contentType,
+							);
+
+							returnData.push({
+								json: { success: true },
+								binary: { data: binaryData },
+								pairedItem: { item: i },
+							});
+						} else {
+							const responseData = await this.helpers.httpRequestWithAuthentication.call(
+								this,
+								'htmlcsstopdfApi',
+								{
+									method: 'POST',
+									url: 'https://pdfmunk.com/api/v1/convert/pdf/image',
+									...requestOptions,
+									returnFullResponse: true,
+								},
+							);
+							const statusCode = (responseData as { statusCode?: number }).statusCode ?? 0;
+							const bodyData = toJsonObject((responseData as { body?: unknown }).body);
+							returnData.push({
+								json: statusCode >= 400 ? { ...bodyData, statusCode } : bodyData,
+								pairedItem: { item: i },
+							});
+						}
+					} else if (operation === 'convertImageToPdf') {
+						const urlsInput = this.getNodeParameter('convert_image_pdf_urls', i) as string;
+						const output = this.getNodeParameter('convert_image_pdf_output', i) as string;
+						const outputFilename = this.getNodeParameter('convert_image_pdf_filename', i) as string;
+
+						const urls = urlsInput
+							.split(',')
+							.map((url) => url.trim())
+							.filter((url) => url);
+
+						if (urls.length === 0) {
+							throw new NodeOperationError(this.getNode(), 'At least one image URL is required', {
+								itemIndex: i,
+							});
+						}
+
+						if (urls.length > 100) {
+							throw new NodeOperationError(this.getNode(), 'Maximum 100 image URLs are allowed', {
+								itemIndex: i,
+							});
+						}
+
+						const body: Record<string, unknown> = {
+							output,
+							output_filename: outputFilename,
+						};
+
+						if (urls.length === 1) {
+							body.image_url = urls[0];
+						} else {
+							body.image_urls = urls;
+						}
+
+						if (output === 'file') {
+							const responseData = await this.helpers.httpRequestWithAuthentication.call(
+								this,
+								'htmlcsstopdfApi',
+								{
+									method: 'POST',
+									url: 'https://pdfmunk.com/api/v1/convert/image/pdf',
+									body,
+									json: true,
+									encoding: 'arraybuffer',
+									returnFullResponse: true,
+								},
+							);
+
+							const statusCode = (responseData as { statusCode?: number }).statusCode ?? 0;
+							if (statusCode >= 400) {
+								const errorBody = parseArrayBufferBody((responseData as { body?: unknown }).body);
+								returnData.push({
+									json: { ...errorBody, statusCode },
+									pairedItem: { item: i },
+								});
+								continue;
+							}
+
+							const binaryData = await this.helpers.prepareBinaryData(
+								Buffer.from(responseData.body as ArrayBuffer),
+								outputFilename.endsWith('.pdf') ? outputFilename : `${outputFilename}.pdf`,
+								'application/pdf',
+							);
+
+							returnData.push({
+								json: { success: true },
+								binary: { data: binaryData },
+								pairedItem: { item: i },
+							});
+						} else {
+							const responseData = await this.helpers.httpRequestWithAuthentication.call(
+								this,
+								'htmlcsstopdfApi',
+								{
+									method: 'POST',
+									url: 'https://pdfmunk.com/api/v1/convert/image/pdf',
 									body,
 									json: true,
 									returnFullResponse: true,
@@ -1230,22 +1927,35 @@ export class Htmlcsstopdf implements INodeType {
 				} else if (resource === 'pdfSecurity') {
 					// Handle PDF Security operations
 					if (operation === 'lockPdf') {
-						const pdfUrl = this.getNodeParameter('lock_url', i) as string;
+						const lockInputType = this.getNodeParameter('lock_input_type', i) as string;
 						const password = this.getNodeParameter('lock_password', i) as string;
 						const inputPassword = this.getNodeParameter('lock_input_password', i, '') as string;
 						const outputType = this.getNodeParameter('lock_output', i) as string;
 						const outputName = this.getNodeParameter('lock_output_name', i) as string;
 
 						const body: Record<string, unknown> = {
-							url: pdfUrl,
 							password,
 							output: outputType,
 							output_name: outputName,
 						};
 
+						if (lockInputType === 'url') {
+							body.url = this.getNodeParameter('lock_url', i) as string;
+						}
+
 						if (inputPassword) {
 							body.input_password = inputPassword;
 						}
+
+						const requestOptions =
+							lockInputType === 'file'
+								? await createSingleFileMultipart(
+										i,
+										this.getNodeParameter('lock_file_binary_property', i) as string,
+										'file',
+										body,
+								  )
+								: { body, json: true };
 
 						if (outputType === 'file') {
 							const responseData = await this.helpers.httpRequestWithAuthentication.call(
@@ -1254,8 +1964,7 @@ export class Htmlcsstopdf implements INodeType {
 								{
 									method: 'POST',
 									url: 'https://pdfmunk.com/api/v1/lockPdf',
-									body,
-									json: true,
+									...requestOptions,
 									encoding: 'arraybuffer',
 									returnFullResponse: true,
 								},
@@ -1289,8 +1998,7 @@ export class Htmlcsstopdf implements INodeType {
 								{
 									method: 'POST',
 									url: 'https://pdfmunk.com/api/v1/lockPdf',
-									body,
-									json: true,
+									...requestOptions,
 									returnFullResponse: true,
 								},
 							);
@@ -1302,17 +2010,30 @@ export class Htmlcsstopdf implements INodeType {
 							});
 						}
 					} else if (operation === 'unlockPdf') {
-						const pdfUrl = this.getNodeParameter('unlock_url', i) as string;
+						const unlockInputType = this.getNodeParameter('unlock_input_type', i) as string;
 						const password = this.getNodeParameter('unlock_password', i) as string;
 						const outputType = this.getNodeParameter('unlock_output', i) as string;
 						const outputName = this.getNodeParameter('unlock_output_name', i) as string;
 
-						const body = {
-							url: pdfUrl,
+						const body: Record<string, unknown> = {
 							password,
 							output: outputType,
 							output_name: outputName,
 						};
+
+						if (unlockInputType === 'url') {
+							body.url = this.getNodeParameter('unlock_url', i) as string;
+						}
+
+						const requestOptions =
+							unlockInputType === 'file'
+								? await createSingleFileMultipart(
+										i,
+										this.getNodeParameter('unlock_file_binary_property', i) as string,
+										'file',
+										body,
+								  )
+								: { body, json: true };
 
 						if (outputType === 'file') {
 							const responseData = await this.helpers.httpRequestWithAuthentication.call(
@@ -1321,8 +2042,7 @@ export class Htmlcsstopdf implements INodeType {
 								{
 									method: 'POST',
 									url: 'https://pdfmunk.com/api/v1/unlockPdf',
-									body,
-									json: true,
+									...requestOptions,
 									encoding: 'arraybuffer',
 									returnFullResponse: true,
 								},
@@ -1356,8 +2076,7 @@ export class Htmlcsstopdf implements INodeType {
 								{
 									method: 'POST',
 									url: 'https://pdfmunk.com/api/v1/unlockPdf',
-									body,
-									json: true,
+									...requestOptions,
 									returnFullResponse: true,
 								},
 							);
@@ -1372,15 +2091,28 @@ export class Htmlcsstopdf implements INodeType {
 				} else if (resource === 'pdfParsing') {
 					// Handle PDF Parsing operations
 					if (operation === 'parsePdf') {
-						const pdfUrl = this.getNodeParameter('parse_url', i) as string;
+						const parseInputType = this.getNodeParameter('parse_input_type', i) as string;
 						const mode = this.getNodeParameter('parse_mode', i) as string;
 						const pages = this.getNodeParameter('parse_pages', i) as string;
 
-						const body = {
-							url: pdfUrl,
+						const body: Record<string, unknown> = {
 							mode,
 							pages,
 						};
+
+						if (parseInputType === 'url') {
+							body.url = this.getNodeParameter('parse_url', i) as string;
+						}
+
+						const requestOptions =
+							parseInputType === 'file'
+								? await createSingleFileMultipart(
+										i,
+										this.getNodeParameter('parse_file_binary_property', i) as string,
+										'file',
+										body,
+								  )
+								: { body, json: true };
 
 						const responseData = await this.helpers.httpRequestWithAuthentication.call(
 							this,
@@ -1388,8 +2120,7 @@ export class Htmlcsstopdf implements INodeType {
 							{
 								method: 'POST',
 								url: 'https://pdfmunk.com/api/v1/pdf/parse',
-								body,
-								json: true,
+								...requestOptions,
 								returnFullResponse: true,
 							},
 						);
@@ -1400,15 +2131,14 @@ export class Htmlcsstopdf implements INodeType {
 							pairedItem: { item: i },
 						});
 					} else if (operation === 'parsePdfOcr') {
-						const pdfUrl = this.getNodeParameter('parse_url', i) as string;
+						const parseInputType = this.getNodeParameter('parse_input_type', i) as string;
 						const pages = this.getNodeParameter('parse_pages', i) as string;
 						const lang = this.getNodeParameter('lang', i) as string;
 						const dpi = this.getNodeParameter('dpi', i) as number;
 						const psm = this.getNodeParameter('psm', i) as number;
 						const oem = this.getNodeParameter('oem', i) as number;
 
-						const body = {
-							url: pdfUrl,
+						const body: Record<string, unknown> = {
 							pages,
 							lang,
 							dpi,
@@ -1416,14 +2146,27 @@ export class Htmlcsstopdf implements INodeType {
 							oem,
 						};
 
+						if (parseInputType === 'url') {
+							body.url = this.getNodeParameter('parse_url', i) as string;
+						}
+
+						const requestOptions =
+							parseInputType === 'file'
+								? await createSingleFileMultipart(
+										i,
+										this.getNodeParameter('parse_file_binary_property', i) as string,
+										'file',
+										body,
+								  )
+								: { body, json: true };
+
 						const responseData = await this.helpers.httpRequestWithAuthentication.call(
 							this,
 							'htmlcsstopdfApi',
 							{
 								method: 'POST',
 								url: 'https://pdfmunk.com/api/v1/pdf/ocr/parse',
-								body,
-								json: true,
+								...requestOptions,
 								returnFullResponse: true,
 							},
 						);
