@@ -1941,11 +1941,7 @@ export class Htmlcsstopdf implements INodeType {
 							output_filename: outputFilename,
 						};
 
-						if (urls.length === 1) {
-							body.image_url = urls[0];
-						} else {
-							body.image_urls = urls;
-						}
+						body.urls = urls;
 
 						if (output === 'file') {
 							const responseData = await this.helpers.httpRequestWithAuthentication.call(
