@@ -2,7 +2,7 @@
 	"node": "n8n-nodes-htmlcsstopdf.htmlcsstopdf",
 	"nodeVersion": "1.0",
 	"codexVersion": "1.0",
-	"categories": ["Development", "Images", "PDF Creation"],
+	"categories": ["Developer Tools", "Marketing", "Productivity", "Utility", "Miscellaneous"],
 	"alias": [
 		"PDF",
 		"HTML",
