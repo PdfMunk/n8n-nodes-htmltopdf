@@ -1603,7 +1603,7 @@ export class Htmlcsstopdf implements INodeType {
 											);
 										}
 
-										if (urls.length > 15) {
+										if (urls.length > 25) {
 											throw new NodeOperationError(
 												this.getNode(),
 												'Maximum 15 PDF URLs allowed for merging',
