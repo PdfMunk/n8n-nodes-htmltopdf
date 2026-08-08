@@ -34,4 +34,6 @@ jobs:
       - name: Publish with provenance
         # Do NOT set NODE_AUTH_TOKEN here — it breaks OIDC authentication.
         # Provenance is generated automatically via Trusted Publishers.
-        run: npm publish --provenance --access public
+        # --ignore-scripts skips prepublishOnly (which runs lint requiring
+        # @n8n/node-cli — not a CI dep). Build is already done above.
+        run: npm publish --provenance --access public --ignore-scripts
