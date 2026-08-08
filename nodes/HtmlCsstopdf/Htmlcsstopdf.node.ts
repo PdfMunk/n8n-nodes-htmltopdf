@@ -78,7 +78,7 @@ export class Htmlcsstopdf implements INodeType {
 				"Print",
 				"Document"
 			],
-			categories: ['Developer Tools', 'Marketing', 'Productivity', 'Utility', 'Miscellaneous'],
+			categories: ['Development', 'Marketing & Content', 'Productivity', 'Utility', 'Miscellaneous'],
 			subcategories: {
 				Documents: ['PDF', 'OCR', 'Conversion', 'HTML'],
 				Utilities: ['File Processing', 'Screenshots'],
@@ -360,6 +360,47 @@ export class Htmlcsstopdf implements INodeType {
 				},
 			},
 			{
+				displayName: 'Wait Until',
+				name: 'wait_until',
+				type: 'options',
+				options: [
+					{
+						name: 'DOM Content Loaded',
+						value: 'domcontentloaded',
+						description: 'Recommended for speed & stability',
+					},
+					{
+						name: 'Load',
+						value: 'load',
+						description: 'Standard (waits for all resources to download)',
+					},
+					{
+						name: 'Network Idle',
+						value: 'networkidle',
+						description: 'For dynamic content (waits for 500ms of no requests)',
+					},
+				],
+				default: 'load',
+				description: 'Lifecycle event the browser waits for before capturing the PDF',
+				displayOptions: {
+					show: {
+						operation: ['htmlToPdf'],
+					},
+				},
+			},
+			{
+				displayName: 'Wait Till',
+				name: 'wait_till',
+				type: 'number',
+				default: 0,
+				description: 'How long (either in seconds or milliseconds, e.g., 1 or 1000) the browser should sleep after the wait_until event has succeeded before generating the PDF. Useful for CSS animations or font rendering to settle.',
+				displayOptions: {
+					show: {
+						operation: ['htmlToPdf'],
+					},
+				},
+			},
+			{
 				displayName: 'Output Filename',
 				name: 'output_filename',
 				type: 'string',
@@ -379,7 +420,20 @@ export class Htmlcsstopdf implements INodeType {
 				description: 'Request timeout in seconds (default: 300 seconds = 5 minutes). Increase this for large PDFs.',
 				displayOptions: {
 					show: {
-						operation: ['htmlToPdf', 'urlToPdf'],
+						operation: ['urlToPdf'],
+					},
+				},
+			},
+			{
+				displayName: 'Timeout (in Seconds)',
+				name: 'timeout',
+				type: 'number',
+				default: 300,
+				description: 'Request timeout in seconds (default: 300 seconds = 5 minutes). Increase this for large PDFs.',
+				displayOptions: {
+					show: {
+						operation: ['htmlToPdf'],
+						wait_until: ['load'],
 					},
 				},
 			},
@@ -1459,7 +1513,7 @@ export class Htmlcsstopdf implements INodeType {
 					// Handle PDF Creation operations
 					const outputFormat = this.getNodeParameter('output_format', i) as string;
 					const outputFilename = this.getNodeParameter('output_filename', i) as string;
-					const timeoutSeconds = this.getNodeParameter('timeout', i) as number;
+					const timeoutSeconds = this.getNodeParameter('timeout', i, 300) as number;
 					const timeout = timeoutSeconds * 1000;
 					const body: Record<string, unknown> = { output_filename: outputFilename };
 
@@ -1469,6 +1523,8 @@ export class Htmlcsstopdf implements INodeType {
 						body.viewPortWidth = this.getNodeParameter('viewPortWidth', i) as number;
 						body.viewPortHeight = this.getNodeParameter('viewPortHeight', i) as number;
 						body.output_format = outputFormat;
+						body.wait_until = this.getNodeParameter('wait_until', i) as string;
+						body.wait_till = this.getNodeParameter('wait_till', i) as number;
 
 						const dynamicParams = this.getNodeParameter('dynamic_params', i, {}) as {
 							params?: Array<{ key?: string; value?: string }>;
