@@ -5,7 +5,7 @@ import type {
 	INodeType,
 	INodeTypeDescription,
 } from 'n8n-workflow';
-import { NodeConnectionTypes, NodeOperationError } from 'n8n-workflow';
+import { NodeConnectionType, NodeOperationError } from 'n8n-workflow';
 
 export class Htmlcsstopdf implements INodeType {
 	description: INodeTypeDescription = {
@@ -85,8 +85,8 @@ export class Htmlcsstopdf implements INodeType {
 				Utilities: ['File Processing', 'Screenshots'],
 			},
 		},
-		inputs: [NodeConnectionTypes.Main],
-		outputs: [NodeConnectionTypes.Main],
+		inputs: [NodeConnectionType.Main],
+		outputs: [NodeConnectionType.Main],
 		credentials: [
 			{
 				name: 'htmlcsstopdfApi',
@@ -498,7 +498,7 @@ export class Htmlcsstopdf implements INodeType {
 				type: 'string',
 				default: 'https://pdfmunk.com/sample.pdf, https://pdfmunk.com/sample1.pdf',
 				placeholder: 'https://pdfmunk.com/sample.pdf, https://pdfmunk.com/sample1.pdf',
-				description: 'Comma-separated list of PDF URLs to merge (minimum 2, maximum 15)',
+				description: 'Comma-separated list of PDF URLs to merge (minimum 2, maximum 25)',
 				displayOptions: {
 					show: {
 						operation: ['mergePdfs'],
