@@ -5,12 +5,13 @@ import type {
 	INodeType,
 	INodeTypeDescription,
 } from 'n8n-workflow';
-import { NodeConnectionType, NodeOperationError } from 'n8n-workflow';
+import { NodeConnectionTypes, NodeOperationError } from 'n8n-workflow';
 
 export class Htmlcsstopdf implements INodeType {
 	description: INodeTypeDescription = {
 		displayName: 'HTML to PDF',
 		name: 'htmlcsstopdf',
+		subtitle: '={{$parameter["operation"] + ": " + $parameter["resource"]}}',
 		icon: { light: 'file:htmlcsstopdf.light.svg', dark: 'file:htmlcsstopdf.dark.svg' },
 		group: ['transform'],
 		version: 1,
@@ -84,8 +85,8 @@ export class Htmlcsstopdf implements INodeType {
 				Utilities: ['File Processing', 'Screenshots'],
 			},
 		},
-		inputs: [NodeConnectionType.Main],
-		outputs: [NodeConnectionType.Main],
+		inputs: [NodeConnectionTypes.Main],
+		outputs: [NodeConnectionTypes.Main],
 		credentials: [
 			{
 				name: 'htmlcsstopdfApi',
@@ -1662,7 +1663,7 @@ export class Htmlcsstopdf implements INodeType {
 										if (urls.length > 25) {
 											throw new NodeOperationError(
 												this.getNode(),
-												'Maximum 15 PDF URLs allowed for merging',
+												'Maximum 25 PDF URLs allowed for merging',
 												{ itemIndex: i },
 											);
 										}
